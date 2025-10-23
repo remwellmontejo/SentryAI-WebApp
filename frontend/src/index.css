@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: corporate, cupcake, cmyk;
+}
+
+;
+
+@plugin "daisyui/theme" {
+  name: "corporateBlue";
+  default: true;
+  /* set as default */
+  prefersdark: false;
+  /* set as default dark mode (prefers-color-scheme:dark) */
+  color-scheme: light;
+  /* color of browser-provided UI */
+
+  /* Base */
+  --color-base-100: oklch(100% 0 0);
+  /* Pure White */
+  --color-base-200: oklch(96% 0.01 230);
+  /* Very Light Cool Grey */
+  --color-base-300: oklch(92% 0.02 230);
+  /* Light Cool Grey */
+  --color-base-content: oklch(30% 0.04 230);
+  /* Dark Grey-Blue (for text) */
+
+  /* Primary (Deep Blue) */
+  --color-primary: oklch(45% 0.22 230);
+  /* Deep, Strong Blue */
+  --color-primary-content: oklch(100% 0 0);
+  /* White */
+
+  /* Secondary (Muted Grey-Blue) */
+  --color-secondary: oklch(70% 0.05 220);
+  /* Muted, Professional Grey-Blue */
+  --color-secondary-content: oklch(30% 0.04 230);
+  /* Dark Grey-Blue */
+
+  /* Accent (Clear Blue) */
+  --color-accent: oklch(65% 0.18 220);
+  /* Clear, Lighter Blue */
+  --color-accent-content: oklch(30% 0.04 230);
+  /* Dark Grey-Blue */
+
+  /* Neutral (Dark) */
+  --color-neutral: oklch(30% 0.04 230);
+  /* Dark Grey-Blue */
+  --color-neutral-content: oklch(98% 0.01 230);
+  /* White */
+
+  /* Semantic Colors */
+  --color-info: oklch(60% 0.15 220);
+  --color-info-content: oklch(100% 0 0);
+  --color-success: oklch(60% 0.15 140);
+  --color-success-content: oklch(100% 0 0);
+  --color-warning: oklch(75% 0.2 80);
+  --color-warning-content: oklch(30% 0.04 80);
+  /* Dark text on yellow */
+  --color-error: oklch(60% 0.2 25);
+  --color-error-content: oklch(100% 0 0);
+
+  /* Standard DaisyUI border radius */
+  --rounded-box: 0.5rem;
+  /* Slightly squared-off boxes */
+  --rounded-btn: 0.25rem;
+  /* Slightly squared-off buttons */
+  --rounded-badge: 0.25rem;
+
+  /* Custom variables from your example */
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.5rem;
+
+  /* base sizes */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+
+  /* border size */
+  --border: 1px;
+
+  /* effects */
+  --depth: 1;
+  --noise: 0;
+}
