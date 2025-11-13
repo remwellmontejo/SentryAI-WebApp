@@ -47,7 +47,7 @@ function LandingPage() {
                             <input
                                 type="input"
                                 className="input input-bordered w-full rounded-md placeholder-gray-500"
-                                placeholder='Type your platenumber here'
+                                placeholder='Type your plate number here'
                                 value={plateNumber} // Set value from state
                                 onChange={(e) => setPlateNumber(e.target.value)} // Update state on change
                             />
