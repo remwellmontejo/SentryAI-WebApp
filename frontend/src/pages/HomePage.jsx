@@ -11,18 +11,18 @@ const HomePage = () => {
         <Navbar />
       </div>
       <div className='mx-20'>
-        <div className='grid grid-cols-1 gap-6 mb-10 sm:grid-cols-2 lg:grid-cols-4'>
-          <InfoCard title="Total Apprehended Cars" content="256" properties="bg-green-400 m-2">
-            <CarFront className='size-20' />
+        <div className='grid grid-cols-1 gap-6 mb-4 sm:grid-cols-2 lg:grid-cols-4'>
+          <InfoCard title="Total Apprehended Cars" content="256" properties="bg-green-400 m-2" properties_for_value="text-base-content">
+            <CarFront className='size-20 ' />
           </InfoCard>
-          <InfoCard title="Apprehended Today" content="10" properties="bg-yellow-400 m-2">
-            <CalendarCheck2 className='size-20' />
+          <InfoCard title="Apprehended Today" content="10" properties="bg-red-400 m-2" properties_for_value="text-base-content">
+            <CalendarCheck2 className='size-20 ' />
           </InfoCard>
-          <InfoCard title="Pending Apprehensions" content="20" properties="bg-red-400 m-2">
-            <ClipboardClock className='size-20' />
+          <InfoCard title="Pending Apprehensions" content="20" properties="bg-yellow-400 m-2" properties_for_value="text-base-content">
+            <ClipboardClock className='size-20 ' />
           </InfoCard>
-          <InfoCard title="Active Cameras" content="12" properties="bg-blue-400 m-2">
-            <Video className='size-20' />
+          <InfoCard title="Active Cameras" content="12" properties="bg-blue-400 m-2" properties_for_value="text-base-content">
+            <Video className='size-20 ' />
           </InfoCard>
         </div>
         <HomeTable />

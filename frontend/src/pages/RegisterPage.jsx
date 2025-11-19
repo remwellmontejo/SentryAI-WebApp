@@ -156,6 +156,12 @@ function RegisterPage() {
                     Already have an account?
                     <Link to="/login" className='link ml-1'>Login</Link>
                 </p>
+
+                <div className='pt-4'>
+                    <p>
+                        <Link to="/" className='link mt-4 text-center text-sm text-base-100'>Back to Home Page</Link>
+                    </p>
+                </div>
             </div >
         </div >
     );

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import SentryAILogo from '../assets/sentry-ai-logo.svg?react';
 import { Link, useNavigate } from 'react-router';
+import { Eye, EyeOff } from "lucide-react";
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
 function LoginPage() {
+    const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
@@ -102,12 +104,27 @@ function LoginPage() {
                             <label className="label">
                                 <span className="label-text text-black">Password</span>
                             </label>
-                            <input
-                                type="password"
-                                className="input input-bordered w-full rounded-md placeholder-gray-500"
-                                value={password} // Set value from state
-                                onChange={(e) => setPassword(e.target.value)} // Update state on change
-                            />
+                            <div className="w-full">
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        className="input input-bordered w-full rounded-md placeholder-gray-500 pr-10" // Added pr-10 to prevent text overlap with icon
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none z-10"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff size={20} />
+                                        ) : (
+                                            <Eye size={20} />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <button type="submit" className="btn btn-primary mt-2 rounded-sm">Login</button>
                     </fieldset>
@@ -116,6 +133,11 @@ function LoginPage() {
                     Don't have an account?
                     <Link to="/register" className='link ml-1'>Sign Up</Link>
                 </p>
+                <div className='pt-4'>
+                    <p>
+                        <Link to="/" className='link mt-4 text-center text-sm text-base-100'>Back to Home Page</Link>
+                    </p>
+                </div>
             </div>
         </div>
     );
