@@ -5,7 +5,7 @@ import bodyParser from 'body-parser';
 
 import apprehendedCarRoutes from './routes/ApprehendedVehicleRoutes.js';
 import connectDB from './config/db.js';
-import authRoutes from './routes/authRoutes.js';
+import authRoutes from './routes/AuthRoutes.js';
 
 const app = express();
 dotenv.config();

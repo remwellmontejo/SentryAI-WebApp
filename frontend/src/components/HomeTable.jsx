@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Search, Filter, ChevronLeft, ChevronRight, ChevronDown, View } from "lucide-react";
+import { useNavigate } from "react-router";
 import axios from "axios";
 
 const TableComponent = () => {
     // State for storing real data from the database
+    const navigate = useNavigate();
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -23,6 +25,10 @@ const TableComponent = () => {
 
         fetchData();
     }, []);
+
+    const toDetailsPage = (id) => {
+        navigate(`/apprehension/${id}`);
+    };
 
     // Helper: Format Date in Manila Time
     const formatDate = (isoString) => {
@@ -89,7 +95,7 @@ const TableComponent = () => {
                         {loading ? (
                             <tr><td colSpan="4" className="text-center py-8">Loading data...</td></tr>
                         ) : vehicles.length === 0 ? (
-                            <tr><td colSpan="4" className="text-center py-8">No apprehensions found.</td></tr>
+                            <tr><td colSpan="4" className="text-center py-8">No pending apprehensions found.</td></tr>
                         ) : (
                             vehicles.map((vehicle) => (
                                 <tr key={vehicle._id} className="border-b border-gray-300 hover:bg-gray-50">
@@ -110,7 +116,10 @@ const TableComponent = () => {
 
                                     {/* Column 4: Action (View Icon) */}
                                     <td className="py-3 px-6 h-12 text-center">
-                                        <button className="text-gray-500 hover:text-[#000060] transition-colors p-1 rounded-full hover:bg-blue-50">
+                                        <button
+                                            onClick={() => toDetailsPage(vehicle._id)}
+                                            className="text-gray-500 hover:text-[#000060] transition-colors p-1 rounded-full hover:bg-blue-50"
+                                        >
                                             <View size={30} className="mx-auto" />
                                         </button>
                                     </td>
