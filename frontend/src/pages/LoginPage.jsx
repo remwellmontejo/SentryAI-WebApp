@@ -3,7 +3,7 @@ import SentryAILogo from '../assets/sentry-ai-logo.svg?react';
 import { Link, useNavigate } from 'react-router';
 import { Eye, EyeOff } from "lucide-react";
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import api from '../lib/axios.js';
 
 function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +25,7 @@ function LoginPage() {
 
 
         try {
-            const response = await axios.post('http://localhost:5001/auth/login', {
+            const response = await api.post('/auth/login', {
                 email: formData.email,
                 password: formData.password,
             });

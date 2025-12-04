@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { ArrowLeft, Edit, Trash2 } from "lucide-react"; // Import necessary icons
-import axios from "axios";
+import api from "../lib/axios.js";
 import Navbar from "../components/Navbar";
 
 const DetailsPage = () => {
@@ -15,7 +15,7 @@ const DetailsPage = () => {
     useEffect(() => {
         const fetchDetails = async () => {
             try {
-                const response = await axios.get(`http://localhost:5001/api/apprehended-vehicle/${id}`);
+                const response = await api.get(`/api/apprehended-vehicle/${id}`);
                 setVehicle(response.data);
                 setLoading(false);
             } catch (err) {

@@ -3,6 +3,7 @@ import SentryAILogo from '../assets/sentry-ai-logo.svg?react';
 import { Link, useNavigate } from 'react-router';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import api from '../lib/axios.js';
 
 function RegisterPage() {
 
@@ -32,7 +33,7 @@ function RegisterPage() {
         }
 
         try {
-            await axios.post('http://localhost:5001/auth/register', {
+            await api.post('/auth/register', {
                 username: formData.username,
                 email: formData.email,
                 password: formData.password,
