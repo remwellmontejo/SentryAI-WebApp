@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, Filter, ChevronLeft, ChevronRight, ChevronDown, View } from "lucide-react";
 import { useNavigate } from "react-router";
 import axios from "axios";
+import api from "../lib/axios.js";
 
 const TableComponent = () => {
     // State for storing real data from the database
@@ -14,7 +15,7 @@ const TableComponent = () => {
         const fetchData = async () => {
             try {
                 // using port 5001 as per your last update
-                const response = await axios.get('http://localhost:5001/api/apprehended-vehicle/get');
+                const response = await api.get('/api/apprehended-vehicle/get');
                 setVehicles(response.data);
                 setLoading(false);
             } catch (error) {
