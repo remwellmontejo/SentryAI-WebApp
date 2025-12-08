@@ -4,32 +4,12 @@ import { ArrowLeft, Edit, Trash2, Calendar, Clock, MapPin, AlertCircle, CheckCir
 import api from "../lib/axios.js";
 import Navbar from "../components/Navbar";
 
-// --- HELPER: ASPECT RATIO CORRECTION ---
-const getCorrectedPosition = (x, y, modelSize, imgW, imgH) => {
-    const modelW = modelSize;
-    const modelH = modelSize;
-    const imgAR = imgW / imgH;
-    const modelAR = modelW / modelH;
-
-    let activeW = modelW;
-    let activeH = modelH;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    if (imgAR > modelAR) {
-        activeW = modelW;
-        activeH = modelW / imgAR;
-        offsetY = (modelH - activeH) / 2;
-    } else {
-        activeH = modelH;
-        activeW = modelH * imgAR;
-        offsetX = (modelW - activeW) / 2;
-    }
-
-    const percentX = ((x - offsetX) / activeW) * 100;
-    const percentY = ((y - offsetY) / activeH) * 100;
+const getSquarePosition = (x, y, modelSize) => {
+    const percentX = ((x - 20) / modelSize) * 100;
+    const percentY = ((y - 20) / modelSize) * 100;
 
     return {
+        // Clamp between 0-100% to keep marker inside the box
         x: Math.max(0, Math.min(100, percentX)) + '%',
         y: Math.max(0, Math.min(100, percentY)) + '%'
     };
@@ -117,39 +97,49 @@ const DetailsPage = () => {
                 </div>
 
                 <div className="grid lg:grid-cols-2 gap-8 lg:items-center">
-
-                    {/* --- LEFT: IMAGE SECTION (Original sizing kept) --- */}
-                    <div className="col-span-1">
-                        {vehicle.sceneImageBase64 ? (
-                            <div className="relative w-full rounded-lg shadow-md border border-gray-200 overflow-hidden bg-gray-100">
+                    {/* --- LEFT: IMAGE SECTION (Square Crop) --- */}
+                    {vehicle.sceneImageBase64 ? (
+                        <div className="bg-white">
+                            {/* aspect-square: Forces 1:1 ratio
+                                    object-cover: Cuts off the extra width to fill the square
+                                    relative: Allows absolute positioning of the dot
+                                */}
+                            <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100">
                                 <img
                                     src={`data:image/jpeg;base64,${vehicle.sceneImageBase64}`}
                                     alt="Apprehension Scene"
-                                    className="w-full h-max block"
+                                    className="w-full h-full object-cover"
                                 />
+
+                                {/* The Centroid Marker */}
                                 {vehicle.x_coordinate !== undefined && vehicle.y_coordinate !== undefined && (() => {
-                                    const pos = getCorrectedPosition(vehicle.x_coordinate, vehicle.y_coordinate, AI_INPUT_SIZE, IMG_WIDTH, IMG_HEIGHT);
+                                    // Standard Top-Left Logic
+                                    const pos = getSquarePosition(vehicle.x_coordinate, vehicle.y_coordinate, AI_INPUT_SIZE);
                                     return (
                                         <div
                                             className="absolute w-4 h-4 border-2 border-red-500 rounded-full bg-red-500/20 shadow-[0_0_10px_rgba(255,0,0,0.5)] z-10 pointer-events-none transition-all duration-500"
-                                            style={{ left: pos.x, top: pos.y, transform: 'translate(-50%, -50%)' }}
+                                            style={{
+                                                left: pos.x,
+                                                top: pos.y,
+                                                transform: 'translate(-50%, -50%)' // Centers the dot on the exact pixel
+                                            }}
                                         >
-                                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap">
+                                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap z-20">
                                                 {vehicle.confidenceScore}%
                                             </span>
                                         </div>
                                     );
                                 })()}
                             </div>
-                        ) : (
-                            <div className="w-full h-64 bg-gray-200 flex items-center justify-center text-gray-500 rounded-lg border border-gray-300">
-                                No Evidence Image
-                            </div>
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        <div className="w-full h-96 bg-gray-100 flex items-center justify-center text-gray-400 rounded-lg border border-gray-300">
+                            No Evidence Image
+                        </div>
+                    )}
 
                     {/* --- RIGHT: DETAILS SECTION (New styling applied) --- */}
-                    <div className="flex flex-col h-full">
+                    <div className="flex flex-col h-min">
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden">
 
                             {/* Card Header: Type & Status */}
