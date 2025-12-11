@@ -5,8 +5,8 @@ import api from "../lib/axios.js";
 import Navbar from "../components/Navbar";
 
 const getSquarePosition = (x, y, modelSize) => {
-    const percentX = ((x - 50) / modelSize) * 100;
-    const percentY = ((y - 24) / modelSize) * 100;
+    const percentX = ((x) / modelSize) * 100;
+    const percentY = ((y) / modelSize) * 100;
     return {
         // Clamp between 0-100% to keep marker inside the box
         x: Math.max(0, Math.min(100, percentX)) + '%',
@@ -40,7 +40,7 @@ const DetailsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const AI_INPUT_SIZE = 240;
+    const AI_INPUT_SIZE = 480;
     const IMG_WIDTH = 1600;
     const IMG_HEIGHT = 1200;
 

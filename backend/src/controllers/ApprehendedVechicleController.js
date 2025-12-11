@@ -37,7 +37,7 @@ export async function createApprehendedVehicle(req, res) {
         res.status(200).json({ message: 'Apprehended vehicle created!' });
     }
     catch (error) {
-        console.error('Error creating apprehended car:', error);
+        console.error(`[ERROR] Upload Failed: ${error.message}`);
         res.status(500).json({ message: 'Server error' });
     }
 }
