@@ -5,8 +5,8 @@ import api from "../lib/axios.js";
 import Navbar from "../components/Navbar";
 
 const getSquarePosition = (x, y, modelSize) => {
-    const percentX = ((x) / modelSize) * 100;
-    const percentY = ((y - 24) / modelSize) * 100;
+    const percentX = ((x + 12) / modelSize) * 100;
+    const percentY = ((y) / modelSize) * 100;
     return {
         // Clamp between 0-100% to keep marker inside the box
         x: Math.max(0, Math.min(100, percentX)) + '%',
