@@ -21,7 +21,7 @@ const CamerasPage = () => {
         // Refresh the image 2 times per second (500ms)
         const interval = setInterval(() => {
             setFeedHash(Date.now());
-        }, 200);
+        }, 500);
 
         return () => clearInterval(interval);
     }, []);
