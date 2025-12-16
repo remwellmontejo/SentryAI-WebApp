@@ -4,9 +4,6 @@ const router = express.Router();
 
 // --- IN-MEMORY STREAM STORAGE ---
 // Key = SERIAL NUMBER (not ID), Value = Image Buffer
-const activeStreams = {};
-
-let latestStreamFrame = null;
 
 // ============================================================================
 // 1. CAMERA REGISTRATION (App -> DB)
@@ -95,20 +92,89 @@ router.get('/get/:id', async (req, res) => {
 // URL: POST /api/stream/:serialNumber/frame
 // --- UPLOAD ENDPOINT (ESP32) ---
 // POST /api/stream/:serial/frame
-router.post('/stream/frame', express.raw({ type: 'image/jpeg', limit: '5mb' }), (req, res) => {
-    // 1. Overwrite the variable in RAM
-    latestStreamFrame = req.body;
-    res.sendStatus(200);
-});
+// --- IN-MEMORY STORAGE ---
+// Key = Serial Number (e.g., "SN-001")
+// Value = Latest Raw Image Buffer
+const activeStreams = {};
 
-// --- VIEW ENDPOINT (Browser) ---
-// GET /api/stream/:id/feed
-// GET /api/stream/:serial/feed
-// Usage: http://localhost:5000/api/stream/SN-001/feed
-router.get('/stream/feed', (req, res) => {
-    if (!latestStreamFrame) return res.status(404).send('No signal');
-    res.set('Content-Type', 'image/jpeg');
-    res.send(latestStreamFrame);
+// =================================================================
+// 1. ESP32 UPLOAD ENDPOINT
+// URL: POST http://YOUR_IP:5000/api/stream/:serial/frame
+// =================================================================
+app.post('/api/stream/:serial/frame',
+    // IMPORTANT: Parse body as raw binary, not JSON
+    express.raw({ type: 'image/jpeg', limit: '10mb' }),
+    (req, res) => {
+        const serial = req.params.serial;
+        const buffer = req.body;
+
+        // Basic validation
+        if (!buffer || buffer.length === 0) {
+            console.log(`[UPLOAD] ⚠️ Serial: ${serial} | Received empty buffer`);
+            return res.sendStatus(400);
+        }
+
+        console.log(`[UPLOAD] Serial: ${serial} | Size: ${buffer.length} bytes`);
+
+        // Store in RAM
+        activeStreams[serial] = buffer;
+        res.sendStatus(200);
+    }
+);
+
+// =================================================================
+// 2. FRONTEND VIEW ENDPOINT
+// URL: GET http://localhost:5000/api/stream/:serial/feed
+// =================================================================
+app.get('/api/stream/:serial/feed', (req, res) => {
+    const serial = req.params.serial;
+    let buffer = activeStreams[serial];
+
+    if (!buffer) {
+        // console.log(`[VIEW] No signal for ${serial}`);
+        return res.status(404).send('No signal');
+    }
+
+    // --- CORRUPTION FIX START ---
+    // The ESP32 often sends "padding" zeros at the end of the buffer.
+    // We must cut the buffer exactly where the JPEG ends (FF D9).
+
+    // 1. Ensure it is a Buffer
+    if (!Buffer.isBuffer(buffer)) {
+        buffer = Buffer.from(buffer, 'binary');
+    }
+
+    // 2. Find Start of Image (SOI): FF D8
+    const start = buffer.indexOf(Buffer.from([0xFF, 0xD8]));
+
+    // 3. Find End of Image (EOI): FF D9
+    const end = buffer.lastIndexOf(Buffer.from([0xFF, 0xD9]));
+
+    if (start !== -1 && end !== -1 && start < end) {
+        // ✂️ TRIM THE GARBAGE
+        // We add +2 to include the FFD9 bytes themselves
+        const cleanBuffer = buffer.subarray(start, end + 2);
+
+        // Debugging: Show that we actually reduced the size
+        // console.log(`[VIEW] Cleaned: ${buffer.length} -> ${cleanBuffer.length} bytes`);
+
+        buffer = cleanBuffer;
+    } else {
+        console.log(`[VIEW] ⚠️ JPEG Markers missing for ${serial}. Sending raw buffer.`);
+    }
+    // --- CORRUPTION FIX END ---
+
+    // 4. Send the headers that force the browser to see it as an image
+    res.writeHead(200, {
+        'Content-Type': 'image/jpeg',
+        'Content-Length': buffer.length,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    });
+
+    // 5. Send the binary data
+    res.end(buffer);
 });
 
 export default router;
