@@ -92,18 +92,22 @@ router.get('/get/:id', async (req, res) => {
 // B. UPLOAD STREAM FRAME (ESP32 -> Server)
 // URL: POST /api/stream/:serialNumber/frame
 // --- UPLOAD ENDPOINT (ESP32) ---
+r// POST /api/stream/:serial/frame
 router.post('/stream/:serial/frame', express.raw({ type: 'image/jpeg', limit: '5mb' }), (req, res) => {
     const serial = req.params.serial;
-    const size = req.body.length;
+    const buffer = req.body; // In raw mode, this is a Buffer
 
-    // 🔍 DEBUG LOG: Print every upload attempt
-    console.log(`[UPLOAD] Serial: "${serial}" | Size: ${size} bytes`);
+    if (Buffer.isBuffer(buffer) && buffer.length > 0) {
+        // 🔍 DEBUG: Print the first 2 bytes in HEX
+        const byte1 = buffer[0].toString(16).toUpperCase();
+        const byte2 = buffer[1].toString(16).toUpperCase();
 
-    if (size < 1000) {
-        console.warn(`[WARNING] Frame is suspiciously small!`);
+        console.log(`[SERVER RX] Serial: ${serial} | Size: ${buffer.length} | Header: [${byte1} ${byte2}]`);
+    } else {
+        console.log(`[SERVER RX] Serial: ${serial} | Received Empty or Invalid Buffer`);
     }
 
-    activeStreams[serial] = req.body;
+    activeStreams[serial] = buffer;
     res.sendStatus(200);
 });
 
