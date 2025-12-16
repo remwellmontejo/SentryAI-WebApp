@@ -6,56 +6,65 @@ import api from "../lib/axios";
 
 const CamerasPage = () => {
     const { id } = useParams();
-    const [imageSrc, setImageSrc] = useState(null); // Stores the Base64 string
+
+    // 2. State to force refresh
+    const [timestamp, setTimestamp] = useState(Date.now());
     const [isOnline, setIsOnline] = useState(false);
 
     useEffect(() => {
-        const fetchFrame = async () => {
-            try {
-                // Fetch the JSON containing the Base64 string
-                const res = await api.get(`/api/stream/${id}/feed`);
-
-                if (res.data.image) {
-                    setImageSrc(res.data.image);
-                    setIsOnline(true);
-                }
-            } catch (err) {
-                // If 404 (No Signal), just keep the old image or show offline
-                setIsOnline(false);
-            }
-        };
-
-        // Poll every 500ms
-        const interval = setInterval(fetchFrame, 500);
-        fetchFrame(); // Initial fetch
+        // Refresh the image URL every 500ms (2 FPS)
+        const interval = setInterval(() => {
+            setTimestamp(Date.now());
+        }, 500);
 
         return () => clearInterval(interval);
-    }, [id]);
+    }, []);
+
+    // 3. Handle Image Load Success/Failure
+    const handleImageLoad = () => setIsOnline(true);
+    const handleImageError = () => setIsOnline(false);
+
+    // 4. Construct URL
+    // We append ?t=timestamp so the browser doesn't cache the old image
+    const streamUrl = `${api.defaults.baseURL}/api/stream/${id}/feed?t=${timestamp}`;
 
     return (
         <div className='min-h-screen'>
             <Navbar />
             <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
-                <div className="relative w-full max-w-4xl aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800 flex items-center justify-center">
 
-                    {/* 1. IF WE HAVE A SIGNAL, SHOW IT */}
-                    {imageSrc ? (
-                        <img
-                            src={imageSrc}
-                            className={`w-full h-full object-contain transition-opacity duration-300 ${isOnline ? 'opacity-100' : 'opacity-50 grayscale'}`}
-                            alt="Live Stream"
-                        />
-                    ) : (
-                        /* 2. IF NO SIGNAL EVER RECEIVED */
-                        <div className="text-gray-500 text-center">
-                            <p className="text-2xl font-bold">Waiting for Signal...</p>
+                {/* CONTAINER */}
+                <div className="relative w-full max-w-4xl aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800 shadow-2xl flex items-center justify-center">
+
+                    {/* THE IMAGE */}
+                    <img
+                        src={streamUrl}
+                        onLoad={handleImageLoad}
+                        onError={handleImageError}
+                        className={`w-full h-full object-contain ${isOnline ? 'block' : 'hidden'}`}
+                        alt="Live Stream"
+                    />
+
+                    {/* OFFLINE FALLBACK UI */}
+                    {!isOnline && (
+                        <div className="text-center text-gray-500">
+                            <div className="animate-pulse mb-2 text-4xl">📡</div>
+                            <p className="text-xl font-bold">Waiting for Signal...</p>
+                            <p className="text-sm opacity-50">Turn on your ESP32</p>
                         </div>
                     )}
 
-                    {/* STATUS BADGE */}
-                    <div className={`absolute top-4 left-4 px-2 py-1 rounded text-xs font-bold ${isOnline ? 'bg-red-600 text-white animate-pulse' : 'bg-gray-700 text-gray-400'}`}>
-                        {isOnline ? "● LIVE" : "● OFFLINE"}
-                    </div>
+                    {/* ONLINE BADGE */}
+                    {isOnline && (
+                        <div className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded animate-pulse shadow-lg">
+                            ● LIVE
+                        </div>
+                    )}
+                </div>
+
+                {/* DEBUG INFO */}
+                <div className="mt-4 text-gray-600 text-xs font-mono">
+                    Endpoint: /api/stream/{id}/feed
                 </div>
             </div>
         </div>

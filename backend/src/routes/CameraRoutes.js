@@ -113,30 +113,45 @@ router.post('/stream/:serial/frame', express.raw({ type: 'image/jpeg', limit: '5
 
 // --- VIEW ENDPOINT (Browser) ---
 // GET /api/stream/:id/feed
-// GET /api/stream/:id/feed
 router.get('/stream/:id/feed', async (req, res) => {
     try {
         const camera = await Camera.findById(req.params.id);
-        if (!camera) return res.status(404).json({ error: 'Camera not found' });
+        if (!camera) return res.status(404).send('Camera ID not found');
 
         let buffer = activeStreams[camera.serialNumber];
-        if (!buffer) return res.status(404).json({ error: 'No signal' });
+        if (!buffer) return res.status(404).send('No active stream');
 
-        // 1. Ensure Buffer
+        // 1. Convert to Buffer if it isn't one
         if (!Buffer.isBuffer(buffer)) {
             buffer = Buffer.from(buffer, 'binary');
         }
 
-        // 2. Convert to Base64 String
-        const base64Image = buffer.toString('base64');
-        const dataUrl = `data:image/jpeg;base64,${base64Image}`;
+        // 2. FIND THE JPEG START (Magic Bytes: FF D8)
+        // This skips any "garbage" headers or whitespace at the start
+        const start = buffer.indexOf(Buffer.from([0xFF, 0xD8]));
 
-        // 3. Send as JSON (Browsers handle JSON much better than Raw Binary)
-        res.json({ image: dataUrl });
+        if (start === -1) {
+            console.error("[VIEW] ❌ Invalid JPEG: No start marker found");
+            return res.status(500).send("Invalid JPEG Data");
+        }
+
+        // 3. Fix the Buffer (Slice off the garbage)
+        if (start > 0) {
+            console.log(`[VIEW] ⚠️ Trimmed ${start} bytes of garbage from start`);
+            buffer = buffer.slice(start);
+        }
+
+        // 4. Send Clean Image
+        res.writeHead(200, {
+            'Content-Type': 'image/jpeg',
+            'Content-Length': buffer.length,
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+        });
+        res.end(buffer);
 
     } catch (e) {
         console.error(e);
-        res.status(500).json({ error: 'Server Error' });
+        res.status(500).end();
     }
 });
 
