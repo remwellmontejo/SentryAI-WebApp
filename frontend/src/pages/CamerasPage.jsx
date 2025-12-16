@@ -53,10 +53,6 @@ const CamerasPage = () => {
         }
     };
 
-    // The Image URL changes ONLY when 'lastFrameTime' updates
-    const streamUrl = `${BACKEND_URL}/api/cameras/stream/${SERIAL_NUMBER}/feed?t=${lastFrameTime}`;
-
-
     return (
         <div className='min-h-screen'>
             <Navbar />
