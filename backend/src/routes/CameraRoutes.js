@@ -101,7 +101,7 @@ const activeStreams = {};
 // 1. ESP32 UPLOAD ENDPOINT
 // URL: POST http://YOUR_IP:5000/api/stream/:serial/frame
 // =================================================================
-app.post('/api/stream/:serial/frame',
+router.post('/stream/:serial/frame',
     // IMPORTANT: Parse body as raw binary, not JSON
     express.raw({ type: 'image/jpeg', limit: '10mb' }),
     (req, res) => {
@@ -126,7 +126,7 @@ app.post('/api/stream/:serial/frame',
 // 2. FRONTEND VIEW ENDPOINT
 // URL: GET http://localhost:5000/api/stream/:serial/feed
 // =================================================================
-app.get('/api/stream/:serial/feed', (req, res) => {
+router.get('/stream/:serial/feed', (req, res) => {
     const serial = req.params.serial;
     let buffer = activeStreams[serial];
 
