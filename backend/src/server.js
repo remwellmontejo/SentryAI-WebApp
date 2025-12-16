@@ -29,6 +29,13 @@ app.use(
     }),
 );
 
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "*");
+    next();
+});
+
+
 app.use("/api/apprehended-vehicle", apprehendedCarRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/cameras", cameraRoutes);
