@@ -1,6 +1,6 @@
 import Navbar from '../components/Navbar'
 import { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import api from "../lib/axios";
 
 // ================= CONFIGURATION =================
 const BACKEND_URL = "https://sentryai.onrender.com"; // OR "http://localhost:5000"
@@ -18,7 +18,7 @@ const CamerasPage = () => {
         // Function to ask server: "Do you have a new frame?"
         const checkStatus = async () => {
             try {
-                const res = await axios.get(`${BACKEND_URL}/api/stream/${SERIAL_NUMBER}/status`);
+                const res = await api.get(`/api/cameras/stream/${SERIAL_NUMBER}/status`);
 
                 // 🛡️ CRITICAL FIX: Safety Check
                 // We check if 'res.data' exists AND if 'lastUpdate' is a number
@@ -47,7 +47,7 @@ const CamerasPage = () => {
     }, []);
 
     // The Image URL changes ONLY when 'lastFrameTime' updates
-    const streamUrl = `${BACKEND_URL}/api/stream/${SERIAL_NUMBER}/feed?t=${lastFrameTime}`;
+    const streamUrl = `${BACKEND_URL}/api/cameras/stream/${SERIAL_NUMBER}/feed?t=${lastFrameTime}`;
 
 
     return (
