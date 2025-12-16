@@ -1,9 +1,5 @@
-import React from 'react'
 import Navbar from '../components/Navbar'
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router";
-import api from "../lib/axios";
-// axios is needed for the status check
 import axios from "axios";
 
 // ================= CONFIGURATION =================
@@ -15,38 +11,43 @@ const CamerasPage = () => {
     const [lastFrameTime, setLastFrameTime] = useState(0);
     const [isOnline, setIsOnline] = useState(false);
 
-    // Use a ref to prevent re-triggering loops
+    // Use a ref to track the last update without triggering re-renders
     const lastFetchRef = useRef(0);
 
     useEffect(() => {
-        // Poll for Status (Lightweight JSON)
+        // Function to ask server: "Do you have a new frame?"
         const checkStatus = async () => {
             try {
-                const res = api.get(`/api/cameras/stream/${SERIAL_NUMBER}/status`);
+                const res = await axios.get(`${BACKEND_URL}/api/stream/${SERIAL_NUMBER}/status`);
 
-                // 🛡️ SAFETY CHECK: Make sure 'res.data' actually exists
-                if (res.data && res.data.lastUpdate) {
+                // 🛡️ CRITICAL FIX: Safety Check
+                // We check if 'res.data' exists AND if 'lastUpdate' is a number
+                if (res.data && typeof res.data.lastUpdate === 'number') {
+
                     const serverTime = res.data.lastUpdate;
 
-                    // Only update if the timestamp is new
+                    // ONLY update if the server time is newer than what we have
                     if (serverTime > lastFetchRef.current) {
+                        console.log("New frame detected!", serverTime);
                         lastFetchRef.current = serverTime;
-                        setLastFrameTime(serverTime);
+                        setLastFrameTime(serverTime); // This triggers the image refresh
                         setIsOnline(true);
                     }
                 }
             } catch (err) {
-                console.error("Status check failed", err);
+                // Silently ignore errors (server offline, etc) so the app doesn't crash
+                // console.warn("Status check failed, waiting...");
                 setIsOnline(false);
             }
         };
 
-        const interval = setInterval(checkStatus, 200); // Check every 200ms
+        // Check every 200ms (Very fast & lightweight)
+        const interval = setInterval(checkStatus, 200);
         return () => clearInterval(interval);
     }, []);
 
-    // The Image URL changes only when 'lastFrameTime' changes
-    const streamUrl = `${BACKEND_URL}/api/cameras/stream/${SERIAL_NUMBER}/feed?t=${lastFrameTime}`;
+    // The Image URL changes ONLY when 'lastFrameTime' updates
+    const streamUrl = `${BACKEND_URL}/api/stream/${SERIAL_NUMBER}/feed?t=${lastFrameTime}`;
 
 
     return (
