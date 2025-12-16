@@ -108,32 +108,38 @@ router.post('/stream/:serial/frame', express.raw({ type: 'image/jpeg', limit: '5
 });
 
 // --- VIEW ENDPOINT (Browser) ---
+// GET /api/stream/:id/feed
 router.get('/stream/:id/feed', async (req, res) => {
     try {
         const camera = await Camera.findById(req.params.id);
+        if (!camera) return res.status(404).send('Camera ID not found');
 
-        if (!camera) {
-            console.log(`[VIEW] ❌ Camera ID ${req.params.id} NOT FOUND in DB`);
-            return res.status(404).send('Camera ID not found');
-        }
+        const videoFrame = activeStreams[camera.serialNumber];
 
-        const targetSerial = camera.serialNumber;
-        const frame = activeStreams[targetSerial];
+        if (!videoFrame) return res.status(404).send('No active stream');
 
-        // 🔍 DEBUG LOG: Check what we are looking for vs what we have
-        console.log(`[VIEW] Looking for Serial: "${targetSerial}"`);
+        // 1. FORCE BINARY BUFFER (Crucial Fix)
+        // If 'videoFrame' was accidentally saved as a string, this fixes it.
+        const imgBuffer = Buffer.isBuffer(videoFrame)
+            ? videoFrame
+            : Buffer.from(videoFrame, 'binary');
 
-        if (!frame) {
-            const availableKeys = Object.keys(activeStreams);
-            console.log(`[VIEW] ❌ FAILED. RAM contains these keys: ${JSON.stringify(availableKeys)}`);
-            return res.status(404).send('No active stream');
-        }
+        // 2. SET HEADERS EXPLICITLY
+        res.writeHead(200, {
+            'Content-Type': 'image/jpeg',
+            'Content-Length': imgBuffer.length,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
 
-        console.log(`[VIEW] ✅ SUCCESS! Serving frame for ${targetSerial}`);
-        res.set('Content-Type', 'image/jpeg');
-        res.send(frame);
+        // 3. SEND RAW DATA
+        res.end(imgBuffer);
 
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error(e);
+        res.status(500).end();
+    }
 });
 
 export default router;
