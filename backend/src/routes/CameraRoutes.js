@@ -97,74 +97,61 @@ router.get('/get/:id', async (req, res) => {
 // Value = Latest Raw Image Buffer
 const activeStreams = {};
 
-// =================================================================
-// 1. ESP32 UPLOAD ENDPOINT
-// URL: POST http://YOUR_IP:5000/api/stream/:serial/frame
-// =================================================================
-router.post('/stream/:serial/frame',
-    // IMPORTANT: Parse body as raw binary, not JSON
+app.post('/api/stream/:serial/frame',
     express.raw({ type: 'image/jpeg', limit: '10mb' }),
     (req, res) => {
         const serial = req.params.serial;
         const buffer = req.body;
 
-        // Basic validation
-        if (!buffer || buffer.length === 0) {
-            console.log(`[UPLOAD] ⚠️ Serial: ${serial} | Received empty buffer`);
-            return res.sendStatus(400);
-        }
+        if (!buffer || buffer.length === 0) return res.sendStatus(400);
 
-        console.log(`[UPLOAD] Serial: ${serial} | Size: ${buffer.length} bytes`);
+        // Save Buffer AND the current Time
+        activeStreams[serial] = {
+            buffer: buffer,
+            timestamp: Date.now()
+        };
 
-        // Store in RAM
-        activeStreams[serial] = buffer;
+        console.log(`[UPLOAD] Serial: ${serial} | Size: ${buffer.length}`);
         res.sendStatus(200);
     }
 );
 
-// =================================================================
-// 2. FRONTEND VIEW ENDPOINT
-// URL: GET http://localhost:5000/api/stream/:serial/feed
-// =================================================================
-router.get('/stream/:serial/feed', (req, res) => {
+// 2. NEW: STATUS ENDPOINT (Lightweight check)
+// Frontend calls this to check if a new frame exists
+app.get('/api/stream/:serial/status', (req, res) => {
     const serial = req.params.serial;
-    let buffer = activeStreams[serial];
+    const stream = activeStreams[serial];
 
-    if (!buffer) {
-        // console.log(`[VIEW] No signal for ${serial}`);
-        return res.status(404).send('No signal');
+    if (!stream) {
+        return res.json({ lastUpdate: 0, online: false });
     }
 
-    // --- CORRUPTION FIX START ---
-    // The ESP32 often sends "padding" zeros at the end of the buffer.
-    // We must cut the buffer exactly where the JPEG ends (FF D9).
+    // Return just the timestamp (very small data)
+    res.json({
+        lastUpdate: stream.timestamp,
+        online: true
+    });
+});
 
-    // 1. Ensure it is a Buffer
-    if (!Buffer.isBuffer(buffer)) {
-        buffer = Buffer.from(buffer, 'binary');
-    }
+// 3. VIEW ENDPOINT (Modified to access .buffer)
+app.get('/api/stream/:serial/feed', (req, res) => {
+    const serial = req.params.serial;
+    const stream = activeStreams[serial];
 
-    // 2. Find Start of Image (SOI): FF D8
+    if (!stream || !stream.buffer) return res.status(404).send('No signal');
+
+    let buffer = stream.buffer; // <--- Access the buffer property
+
+    // --- GARBAGE CLEANING (FF D8 ... FF D9) ---
+    if (!Buffer.isBuffer(buffer)) buffer = Buffer.from(buffer, 'binary');
     const start = buffer.indexOf(Buffer.from([0xFF, 0xD8]));
-
-    // 3. Find End of Image (EOI): FF D9
     const end = buffer.lastIndexOf(Buffer.from([0xFF, 0xD9]));
 
     if (start !== -1 && end !== -1 && start < end) {
-        // ✂️ TRIM THE GARBAGE
-        // We add +2 to include the FFD9 bytes themselves
-        const cleanBuffer = buffer.subarray(start, end + 2);
-
-        // Debugging: Show that we actually reduced the size
-        // console.log(`[VIEW] Cleaned: ${buffer.length} -> ${cleanBuffer.length} bytes`);
-
-        buffer = cleanBuffer;
-    } else {
-        console.log(`[VIEW] ⚠️ JPEG Markers missing for ${serial}. Sending raw buffer.`);
+        buffer = buffer.subarray(start, end + 2);
     }
-    // --- CORRUPTION FIX END ---
+    // ------------------------------------------
 
-    // 4. Send the headers that force the browser to see it as an image
     res.writeHead(200, {
         'Content-Type': 'image/jpeg',
         'Content-Length': buffer.length,
@@ -172,8 +159,6 @@ router.get('/stream/:serial/feed', (req, res) => {
         'Pragma': 'no-cache',
         'Expires': '0'
     });
-
-    // 5. Send the binary data
     res.end(buffer);
 });
 
