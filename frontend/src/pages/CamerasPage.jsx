@@ -20,7 +20,7 @@ const CamerasPage = () => {
     }, []);
 
     // Point directly to /api/stream/SN-001/feed
-    const streamUrl = `${api.defaults.baseURL}/api/stream/${HARDCODED_SERIAL}/feed?t=${feedHash}`;
+    const streamUrl = `${api.defaults.baseURL}/api/stream/feed?t=${feedHash}`;
 
 
     return (

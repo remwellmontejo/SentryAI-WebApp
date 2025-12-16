@@ -95,21 +95,9 @@ router.get('/get/:id', async (req, res) => {
 // URL: POST /api/stream/:serialNumber/frame
 // --- UPLOAD ENDPOINT (ESP32) ---
 // POST /api/stream/:serial/frame
-router.post('/stream/:serial/frame', express.raw({ type: 'image/jpeg', limit: '5mb' }), (req, res) => {
-    const serial = req.params.serial;
-    const buffer = req.body; // In raw mode, this is a Buffer
-
-    if (Buffer.isBuffer(buffer) && buffer.length > 0) {
-        // 🔍 DEBUG: Print the first 2 bytes in HEX
-        const byte1 = buffer[0].toString(16).toUpperCase();
-        const byte2 = buffer[1].toString(16).toUpperCase();
-
-        console.log(`[SERVER RX] Serial: ${serial} | Size: ${buffer.length} | Header: [${byte1} ${byte2}]`);
-    } else {
-        console.log(`[SERVER RX] Serial: ${serial} | Received Empty or Invalid Buffer`);
-    }
-
-    activeStreams[serial] = buffer;
+router.post('/stream/frame', express.raw({ type: 'image/jpeg', limit: '5mb' }), (req, res) => {
+    // 1. Overwrite the variable in RAM
+    latestStreamFrame = req.body;
     res.sendStatus(200);
 });
 
@@ -117,40 +105,10 @@ router.post('/stream/:serial/frame', express.raw({ type: 'image/jpeg', limit: '5
 // GET /api/stream/:id/feed
 // GET /api/stream/:serial/feed
 // Usage: http://localhost:5000/api/stream/SN-001/feed
-router.get('/stream/:serial/feed', (req, res) => {
-    const serial = req.params.serial; // <--- Gets "SN-001" directly from URL
-
-    // 1. DIRECT LOOKUP (No Database)
-    let buffer = activeStreams[serial];
-
-    if (!buffer) {
-        // console.log(`[VIEW] No stream found for serial: ${serial}`);
-        return res.status(404).send('No signal');
-    }
-
-    // 2. SAFETY: Ensure Buffer
-    if (!Buffer.isBuffer(buffer)) {
-        buffer = Buffer.from(buffer, 'binary');
-    }
-
-    // 3. CLEAN UP (Find FF D8 ... FF D9)
-    const start = buffer.indexOf(Buffer.from([0xFF, 0xD8]));
-    const end = buffer.lastIndexOf(Buffer.from([0xFF, 0xD9]));
-
-    if (start !== -1 && end !== -1 && start < end) {
-        // Keep only the valid JPEG data
-        buffer = buffer.subarray(start, end + 2);
-    }
-
-    // 4. SEND RESPONSE
-    res.writeHead(200, {
-        'Content-Type': 'image/jpeg',
-        'Content-Length': buffer.length,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-    });
-    res.send(buffer);
+router.get('/stream/feed', (req, res) => {
+    if (!latestStreamFrame) return res.status(404).send('No signal');
+    res.set('Content-Type', 'image/jpeg');
+    res.send(latestStreamFrame);
 });
 
 export default router;
