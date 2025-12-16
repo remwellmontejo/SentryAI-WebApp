@@ -91,32 +91,49 @@ router.get('/get/:id', async (req, res) => {
 
 // B. UPLOAD STREAM FRAME (ESP32 -> Server)
 // URL: POST /api/stream/:serialNumber/frame
-router.post('/stream/:serialNumber/frame', express.raw({ type: 'image/jpeg', limit: '5mb' }), (req, res) => {
-    const serialNumber = req.params.serialNumber;
+// --- UPLOAD ENDPOINT (ESP32) ---
+router.post('/stream/:serial/frame', express.raw({ type: 'image/jpeg', limit: '5mb' }), (req, res) => {
+    const serial = req.params.serial;
+    const size = req.body.length;
 
-    // Save to RAM using Serial Number as key
-    activeStreams[serialNumber] = req.body;
+    // 🔍 DEBUG LOG: Print every upload attempt
+    console.log(`[UPLOAD] Serial: "${serial}" | Size: ${size} bytes`);
 
+    if (size < 1000) {
+        console.warn(`[WARNING] Frame is suspiciously small!`);
+    }
+
+    activeStreams[serial] = req.body;
     res.sendStatus(200);
 });
 
-// C. VIEW STREAM (Frontend -> Server)
-// URL: GET /api/stream/:id/feed 
-// Note: Frontend usually has the DB _id, so we look up the serial first
+// --- VIEW ENDPOINT (Browser) ---
 router.get('/stream/:id/feed', async (req, res) => {
     try {
-        // 1. Find the camera to get its Serial Number
         const camera = await Camera.findById(req.params.id);
-        if (!camera) return res.status(404).send('Camera not found');
 
-        // 2. Retrieve the frame using the Serial Number
-        const frame = activeStreams[camera.serialNumber];
+        if (!camera) {
+            console.log(`[VIEW] ❌ Camera ID ${req.params.id} NOT FOUND in DB`);
+            return res.status(404).send('Camera ID not found');
+        }
 
-        if (!frame) return res.status(404).send('No signal');
+        const targetSerial = camera.serialNumber;
+        const frame = activeStreams[targetSerial];
 
+        // 🔍 DEBUG LOG: Check what we are looking for vs what we have
+        console.log(`[VIEW] Looking for Serial: "${targetSerial}"`);
+
+        if (!frame) {
+            const availableKeys = Object.keys(activeStreams);
+            console.log(`[VIEW] ❌ FAILED. RAM contains these keys: ${JSON.stringify(availableKeys)}`);
+            return res.status(404).send('No active stream');
+        }
+
+        console.log(`[VIEW] ✅ SUCCESS! Serving frame for ${targetSerial}`);
         res.set('Content-Type', 'image/jpeg');
         res.send(frame);
-    } catch (e) { res.sendStatus(500); }
+
+    } catch (e) { console.error(e); }
 });
 
 export default router;
