@@ -21,13 +21,13 @@ const CamerasPage = () => {
         // Refresh the image 2 times per second (500ms)
         const interval = setInterval(() => {
             setFeedHash(Date.now());
-        }, 500);
+        }, 200);
 
         return () => clearInterval(interval);
     }, []);
 
     // Construct the URL
-    const streamUrl = `${BACKEND_URL}api/cameras/stream/${SERIAL_NUMBER}/feed?t=${feedHash}`;
+    const streamUrl = `${BACKEND_URL}/api/cameras/stream/${SERIAL_NUMBER}/feed?t=${feedHash}`;
 
     // Debug: Print to F12 Console so you can click and verify
     console.log("Fetching Frame:", streamUrl);
@@ -76,7 +76,7 @@ const CamerasPage = () => {
                 </div>
 
                 <p className="text-gray-600 text-xs mt-4 font-mono">
-                    Refreshing every 500ms
+                    Refreshing every 200ms
                 </p>
             </div>
         </div>
