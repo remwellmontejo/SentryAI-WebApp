@@ -22,7 +22,7 @@ const CamerasPage = () => {
         // Poll for Status (Lightweight JSON)
         const checkStatus = async () => {
             try {
-                const res = api.get(`/api/stream/${SERIAL_NUMBER}/status`);
+                const res = api.get(`/api/cameras/stream/${SERIAL_NUMBER}/status`);
 
                 const serverTime = res.data.lastUpdate;
 
@@ -43,7 +43,7 @@ const CamerasPage = () => {
     }, []);
 
     // The Image URL changes only when 'lastFrameTime' changes
-    const streamUrl = `${BACKEND_URL}/api/stream/${SERIAL_NUMBER}/feed?t=${lastFrameTime}`;
+    const streamUrl = `${BACKEND_URL}/api/cameras/stream/${SERIAL_NUMBER}/feed?t=${lastFrameTime}`;
 
 
     return (
