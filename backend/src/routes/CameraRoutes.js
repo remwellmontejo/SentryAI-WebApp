@@ -114,27 +114,36 @@ router.get('/stream/:id/feed', async (req, res) => {
         const camera = await Camera.findById(req.params.id);
         if (!camera) return res.status(404).send('Camera ID not found');
 
-        const videoFrame = activeStreams[camera.serialNumber];
+        let buffer = activeStreams[camera.serialNumber];
+        if (!buffer) return res.status(404).send('No active stream');
 
-        if (!videoFrame) return res.status(404).send('No active stream');
+        // 1. Convert to Buffer if it isn't one
+        if (!Buffer.isBuffer(buffer)) {
+            buffer = Buffer.from(buffer, 'binary');
+        }
 
-        // 1. FORCE BINARY BUFFER (Crucial Fix)
-        // If 'videoFrame' was accidentally saved as a string, this fixes it.
-        const imgBuffer = Buffer.isBuffer(videoFrame)
-            ? videoFrame
-            : Buffer.from(videoFrame, 'binary');
+        // 2. FIND THE JPEG START (Magic Bytes: FF D8)
+        // This skips any "garbage" headers or whitespace at the start
+        const start = buffer.indexOf(Buffer.from([0xFF, 0xD8]));
 
-        // 2. SET HEADERS EXPLICITLY
+        if (start === -1) {
+            console.error("[VIEW] ❌ Invalid JPEG: No start marker found");
+            return res.status(500).send("Invalid JPEG Data");
+        }
+
+        // 3. Fix the Buffer (Slice off the garbage)
+        if (start > 0) {
+            console.log(`[VIEW] ⚠️ Trimmed ${start} bytes of garbage from start`);
+            buffer = buffer.slice(start);
+        }
+
+        // 4. Send Clean Image
         res.writeHead(200, {
             'Content-Type': 'image/jpeg',
-            'Content-Length': imgBuffer.length,
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
+            'Content-Length': buffer.length,
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
         });
-
-        // 3. SEND RAW DATA
-        res.end(imgBuffer);
+        res.end(buffer);
 
     } catch (e) {
         console.error(e);
