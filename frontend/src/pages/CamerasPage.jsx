@@ -24,13 +24,16 @@ const CamerasPage = () => {
             try {
                 const res = api.get(`/api/cameras/stream/${SERIAL_NUMBER}/status`);
 
-                const serverTime = res.data.lastUpdate;
+                // 🛡️ SAFETY CHECK: Make sure 'res.data' actually exists
+                if (res.data && res.data.lastUpdate) {
+                    const serverTime = res.data.lastUpdate;
 
-                // ONLY update if the server has a newer timestamp than we do
-                if (serverTime > lastFetchRef.current) {
-                    lastFetchRef.current = serverTime;
-                    setLastFrameTime(serverTime); // This triggers the re-render of <img>
-                    setIsOnline(true);
+                    // Only update if the timestamp is new
+                    if (serverTime > lastFetchRef.current) {
+                        lastFetchRef.current = serverTime;
+                        setLastFrameTime(serverTime);
+                        setIsOnline(true);
+                    }
                 }
             } catch (err) {
                 console.error("Status check failed", err);
