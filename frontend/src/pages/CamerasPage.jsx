@@ -27,7 +27,7 @@ const CamerasPage = () => {
     }, []);
 
     // Construct the URL
-    const streamUrl = `${BACKEND_URL}/stream/${SERIAL_NUMBER}/feed?t=${feedHash}`;
+    const streamUrl = `${BACKEND_URL}api/cameras/stream/${SERIAL_NUMBER}/feed?t=${feedHash}`;
 
     // Debug: Print to F12 Console so you can click and verify
     console.log("Fetching Frame:", streamUrl);
