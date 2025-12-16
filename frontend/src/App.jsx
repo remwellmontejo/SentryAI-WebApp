@@ -5,6 +5,7 @@ import RegisterPage from './pages/RegisterPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import DetailsPage from './pages/DetailsPage.jsx'
 import LandingPage from './pages/LandingPage.jsx'
+import CamerasPage from './pages/CamerasPage.jsx'
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
 
         <Route path="/home" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/cameras" element={<CamerasPage />} />
         <Route path="/apprehension/:id" element={<DetailsPage />} />
       </Routes>
     </div>
