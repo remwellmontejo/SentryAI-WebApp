@@ -6,6 +6,8 @@ const router = express.Router();
 // Key = SERIAL NUMBER (not ID), Value = Image Buffer
 const activeStreams = {};
 
+let latestStreamFrame = null;
+
 // ============================================================================
 // 1. CAMERA REGISTRATION (App -> DB)
 // ============================================================================
@@ -148,7 +150,7 @@ router.get('/stream/:serial/feed', (req, res) => {
         'Pragma': 'no-cache',
         'Expires': '0'
     });
-    res.end(buffer);
+    res.send(buffer);
 });
 
 export default router;
