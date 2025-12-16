@@ -92,7 +92,7 @@ router.get('/get/:id', async (req, res) => {
 // B. UPLOAD STREAM FRAME (ESP32 -> Server)
 // URL: POST /api/stream/:serialNumber/frame
 // --- UPLOAD ENDPOINT (ESP32) ---
-r// POST /api/stream/:serial/frame
+// POST /api/stream/:serial/frame
 router.post('/stream/:serial/frame', express.raw({ type: 'image/jpeg', limit: '5mb' }), (req, res) => {
     const serial = req.params.serial;
     const buffer = req.body; // In raw mode, this is a Buffer
