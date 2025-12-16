@@ -97,7 +97,7 @@ router.get('/get/:id', async (req, res) => {
 // Value = Latest Raw Image Buffer
 const activeStreams = {};
 
-app.post('/api/stream/:serial/frame',
+router.post('/api/stream/:serial/frame',
     express.raw({ type: 'image/jpeg', limit: '10mb' }),
     (req, res) => {
         const serial = req.params.serial;
@@ -118,7 +118,7 @@ app.post('/api/stream/:serial/frame',
 
 // 2. NEW: STATUS ENDPOINT (Lightweight check)
 // Frontend calls this to check if a new frame exists
-app.get('/api/stream/:serial/status', (req, res) => {
+router.get('/api/stream/:serial/status', (req, res) => {
     const serial = req.params.serial;
     const stream = activeStreams[serial];
 
@@ -134,7 +134,7 @@ app.get('/api/stream/:serial/status', (req, res) => {
 });
 
 // 3. VIEW ENDPOINT (Modified to access .buffer)
-app.get('/api/stream/:serial/feed', (req, res) => {
+router.get('/api/stream/:serial/feed', (req, res) => {
     const serial = req.params.serial;
     const stream = activeStreams[serial];
 
