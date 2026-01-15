@@ -1,5 +1,6 @@
 import express from 'express';
 import Camera from '../models/Camera.js';
+import { getCameras, getCameraDetails } from '../controllers/CameraController.js';
 const router = express.Router();
 
 // --- IN-MEMORY STREAM STORAGE ---
@@ -10,12 +11,8 @@ const router = express.Router();
 // ============================================================================
 
 // GET ALL (For List)
-router.get('/get', async (req, res) => {
-    try {
-        const cameras = await Camera.find();
-        res.json(cameras);
-    } catch (e) { res.status(500).send(e.message); }
-});
+router.get('/get', getCameras);
+router.get('/get/:serialNumber', getCameraDetails);
 
 // REGISTER NEW CAMERA
 router.post('/register', async (req, res) => {
@@ -42,13 +39,7 @@ router.post('/register', async (req, res) => {
 });
 
 // GET ONE (By DB ID - used by Frontend Details Page)
-router.get('/get/:id', async (req, res) => {
-    try {
-        const camera = await Camera.findById(req.params.id);
-        if (!camera) return res.status(404).send("Camera not found");
-        res.json(camera);
-    } catch (e) { res.status(500).send(e.message); }
-});
+
 
 // // UPDATE CONFIG (React -> DB)
 // router.put('/cameras/:id/config', async (req, res) => {

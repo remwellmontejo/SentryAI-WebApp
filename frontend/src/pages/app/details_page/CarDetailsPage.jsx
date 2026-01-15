@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { ArrowLeft, Edit, Trash2, Calendar, Clock, MapPin, AlertCircle, CheckCircle, XCircle } from "lucide-react";
-import api from "../lib/axios.js";
-import Navbar from "../components/Navbar";
+import api from "../../../lib/axios.js";
+import Navbar from "../../../components/Navbar.jsx";
 
 const getSquarePosition = (x, y, modelSize) => {
     const percentX = ((x + 12) / modelSize) * 100;
@@ -32,7 +32,7 @@ const getStatusIcon = (status) => {
     }
 };
 
-const DetailsPage = () => {
+const CarDetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
 
@@ -222,4 +222,4 @@ const DetailsPage = () => {
     );
 };
 
-export default DetailsPage;
+export default CarDetailsPage;

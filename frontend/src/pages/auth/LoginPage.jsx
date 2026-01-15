@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import SentryAILogo from '../assets/sentry-ai-logo.svg?react';
+import SentryAILogo from '../../assets/sentry-ai-logo.svg?react';
 import { Link, useNavigate } from 'react-router';
 import { Eye, EyeOff } from "lucide-react";
 import toast from 'react-hot-toast';
-import api from '../lib/axios.js';
+import api from '../../lib/axios.js';
 
 function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);

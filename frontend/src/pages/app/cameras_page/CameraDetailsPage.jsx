@@ -1,6 +1,6 @@
-import Navbar from '../components/Navbar'
+import Navbar from '../../../components/Navbar'
 import { useEffect, useState, useRef } from "react";
-import api from "../lib/axios";
+import api from "../../../lib/axios";
 
 // ================= CONFIGURATION =================
 const BACKEND_URL = "https://sentryai.onrender.com"; // OR "http://localhost:5000"

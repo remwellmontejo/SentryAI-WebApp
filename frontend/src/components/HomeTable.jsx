@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Filter, ChevronLeft, ChevronRight, ChevronDown, View } from "lucide-react";
 import { useNavigate } from "react-router";
-import axios from "axios";
 import api from "../lib/axios.js";
 
 const TableComponent = () => {
