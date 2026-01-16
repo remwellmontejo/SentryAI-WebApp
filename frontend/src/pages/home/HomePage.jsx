@@ -109,7 +109,7 @@ const HomePage = () => {
                   <th className="py-3 px-6 font-semibold border-r border-blue-800/30">Vehicle Type</th>
                   <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Date</th>
                   <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Time</th>
-                  <th className="py-3 px-6 font-semibold text-center">Action</th>
+                  <th className="py-3 px-6 font-semibold text-center">Details</th>
                 </tr>
               </thead>
 

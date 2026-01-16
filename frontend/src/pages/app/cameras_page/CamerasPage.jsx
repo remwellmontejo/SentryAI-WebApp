@@ -92,7 +92,7 @@ const CamerasPage = () => {
                                     <th className="py-3 px-6 font-semibold border-r border-blue-800/30">Name</th>
                                     <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Serial Number</th>
                                     <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Status</th>
-                                    <th className="py-3 px-6 font-semibold text-center">Action</th>
+                                    <th className="py-3 px-6 font-semibold text-center">Details</th>
                                 </tr>
                             </thead>
 
@@ -123,7 +123,7 @@ const CamerasPage = () => {
                                             {/* Column 4: Action (View Icon) */}
                                             <td className="py-3 px-6 h-12 text-center">
                                                 <button
-
+                                                    onClick={() => navigate(`/cameras/${camera.serialNumber}`)}
                                                     className="text-gray-500 hover:text-[#000060] transition-colors p-1 rounded-full hover:bg-blue-50"
                                                 >
                                                     <View size={30} className="mx-auto" />
