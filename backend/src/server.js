@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import path from 'path';
+import http from 'http';
+import { WebSocketServer } from 'ws';
 
 import apprehendedCarRoutes from './routes/ApprehendedVehicleRoutes.js';
 import connectDB from './config/db.js';
@@ -49,6 +51,39 @@ if (process.env.NODE_ENV === 'production') {
 
 
 }
+
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+const viewers = new Map();
+
+wss.on('connection', (ws, req) => {
+    const urlParams = new URLSearchParams(req.url.split('?')[1]);
+    const type = urlParams.get('type');
+    const serial = urlParams.get('serial');
+
+    console.log(`[WS] New Connection: ${type} ${serial}`);
+
+    if (type === 'camera') {
+        ws.on('message', (message) => {
+            const cameraViewers = viewers.get(serial) || [];
+            cameraViewers.forEach(viewerWs => {
+                if (viewerWs.readyState === WebSocket.OPEN) {
+                    viewerWs.send(message);
+                }
+            });
+        });
+
+    } else if (type === 'viewer') {
+        if (!viewers.has(serial)) viewers.set(serial, []);
+        viewers.get(serial).push(ws);
+
+        ws.on('close', () => {
+            const list = viewers.get(serial) || [];
+            viewers.set(serial, list.filter(v => v !== ws));
+        });
+    }
+});
+
 
 connectDB().then(() => {
     app.listen(5001, () => {

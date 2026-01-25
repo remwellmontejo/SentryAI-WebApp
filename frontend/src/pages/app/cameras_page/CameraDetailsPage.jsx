@@ -1,7 +1,7 @@
 import Navbar from "../../../components/Navbar";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from "../../../lib/axios.js";
 import { Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle, Edit, Settings, Trash2 } from "lucide-react";
 import { useParams } from "react-router";
@@ -39,43 +39,61 @@ const formatDateAndTime = (isoString) => {
 const CameraDetailsPage = () => {
     const { serialNumber } = useParams();
     const navigate = useNavigate();
-    const [cameraData, setCameraData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState();
+    const [cameraData, setCameraData] = useState([]);
+
+    const [isConnected, setIsConnected] = useState(false);
+    const imgRef = useRef(null); // Reference to the <img> tag
+    const wsRef = useRef(null);  // Reference to WebSocket
 
     useEffect(() => {
         const fetchDetails = async () => {
             try {
                 const response = await api.get(`/api/cameras/get/${serialNumber}`);
                 setCameraData(response.data);
-                setLoading(false);
             } catch (err) {
                 console.error("Error fetching details:", err);
                 setError("Failed to load camera details.");
-                setLoading(false);
             }
         };
         fetchDetails();
+
+        // 1. Connect to WebSocket
+        // Note: If your site is https, use wss. If http, use ws.
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//sentryai.onrender.com?type=viewer&serial=${serialNumber}`;
+
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+            console.log("Connected to Stream");
+            setIsConnected(true);
+        };
+
+        // 2. Handle Incoming Images
+        ws.onmessage = (event) => {
+            // The message is a Blob (Binary Image)
+            const blob = event.data;
+
+            // Create a temporary URL for the Blob
+            const imageUrl = URL.createObjectURL(blob);
+
+            // Update the image source directly (Fast!)
+            if (imgRef.current) {
+                // Revoke the old URL to free memory
+                if (imgRef.current.src) URL.revokeObjectURL(imgRef.current.src);
+                imgRef.current.src = imageUrl;
+            }
+        };
+
+        ws.onclose = () => setIsConnected(false);
+
+        // Cleanup on Unmount
+        return () => {
+            if (ws.readyState === WebSocket.OPEN) ws.close();
+        };
     }, [serialNumber]);
 
-    // State to handle stream loading
-    const [isStreamLoaded, setIsStreamLoaded] = useState(false);
-    const [streamError, setStreamError] = useState(false);
-
-    const isOnline = () => {
-        return cameraData.status === 'online' ? true : false;
-    };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                    <p className="text-gray-500 font-medium">Loading Camera Details...</p>
-                </div>
-            </div>
-        );
-    }
     return (
         <div className="min-h-screen bg-gray-50" data-theme="corporateBlue">
             <Navbar />
@@ -89,49 +107,23 @@ const CameraDetailsPage = () => {
                 <div className="grid lg:grid-cols-2 gap-8 lg:items-center">
 
                     {/* ================= LEFT COLUMN: LIVE STREAM ================= */}
-                    <div className=" bg-white rounded-3xl shadow-xl shadow-gray-200/40 overflow-hidden relative p-5">
+                    <div className="relative w-full h-full bg-black rounded-xl overflow-hidden flex items-center justify-center">
+                        {/* The Image Element */}
+                        <img
+                            ref={imgRef}
+                            alt="Live Stream"
+                            className="w-full h-full object-contain"
+                        />
 
-                        {/* Live Status Indicator */}
-                        <div className={`absolute top-8 left-8 z-20 px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-2 shadow-sm ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}>
-                            <span className={`block w-2 h-2 rounded-full ${isOnline ? 'bg-white' : 'bg-gray-300'}`}></span>
-                            {isOnline ? 'LIVE STREAM' : 'OFFLINE'}
-                        </div>
-
-                        <div className="w-full h-full bg-gray-900 rounded-2xl overflow-hidden relative flex items-center justify-center">
-                            {/* The MJPEG Stream Image */}
-                            <img
-                                src={serialNumber}
-                                alt="Live Camera Stream"
-                                className={`w-full h-full object-cover transition-opacity duration-500 ${isStreamLoaded ? 'opacity-100' : 'opacity-0'}`}
-                                onLoad={() => setIsStreamLoaded(true)}
-                                onError={() => {
-                                    setIsStreamLoaded(false);
-                                    setStreamError(true);
-                                }}
-                            />
-
-                            {/* Loading / Error State Overlay */}
-                            {!isStreamLoaded && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-white/70 space-y-4">
-                                    {streamError ? (
-                                        <>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-500/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.121-3.536m-1.414-1.414L3 3m0 0l2.829 2.829m0 0L3 3m2.829 2.829a9 9 0 0112.728 0" />
-                                            </svg>
-                                            <p className="font-medium">Stream Unavailable</p>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <svg className="animate-spin h-12 w-12 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            <p className="font-medium tracking-wide">Connecting to Camera...</p>
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                        {/* Overlays */}
+                        {!isConnected && (
+                            <div className="absolute text-white font-bold">Connecting...</div>
+                        )}
+                        {isConnected && (
+                            <div className="absolute top-2 right-2 bg-red-600 text-white text-[10px] px-2 py-1 rounded animate-pulse">
+                                LIVE
+                            </div>
+                        )}
                     </div>
 
                     {/* ================= RIGHT COLUMN: CAMERA DETAILS ================= */}
