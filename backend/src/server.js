@@ -12,6 +12,9 @@ import authRoutes from './routes/AuthRoutes.js';
 import cameraRoutes from './routes/CameraRoutes.js';
 
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+const viewers = new Map();
 const __dirname = path.resolve();
 dotenv.config();
 
@@ -52,10 +55,6 @@ if (process.env.NODE_ENV === 'production') {
 
 }
 
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
-const viewers = new Map();
-
 wss.on('connection', (ws, req) => {
     const urlParams = new URLSearchParams(req.url.split('?')[1]);
     const type = urlParams.get('type');
@@ -84,10 +83,10 @@ wss.on('connection', (ws, req) => {
     }
 });
 
-
 connectDB().then(() => {
-    app.listen(5001, () => {
-        console.log('Server is running on port 5001');
+    const PORT = process.env.PORT || 5001;
+
+    server.listen(PORT, () => {
+        console.log(`🚀 Server + WebSockets running on port ${PORT}`);
     });
 });
-
