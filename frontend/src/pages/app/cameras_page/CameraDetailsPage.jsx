@@ -63,34 +63,59 @@ const CameraDetailsPage = () => {
         const host = "sentryai.onrender.com";
         const wsUrl = `${protocol}//${host}?type=viewer&serial=${serialNumber}`;
 
-        console.log("Connecting to:", wsUrl);
+        console.log(`[DEBUG] Connecting to: ${wsUrl}`);
         const ws = new WebSocket(wsUrl);
 
-        ws.onopen = () => setStatus("Live");
-        ws.onclose = () => setStatus("Offline");
+        ws.onopen = () => {
+            console.log("[DEBUG] WebSocket Connected");
+            setStatus("Live");
+        };
 
-        ws.onmessage = (event) => {
-            const msg = event.data;
+        ws.onclose = (event) => {
+            console.log("[DEBUG] WebSocket Closed:", event);
+            setStatus("Offline");
+        };
 
-            // 2. PROTOCOL: START
-            // If we see "IMG_START", we know a new image is coming. Clear the bucket.
-            if (msg === "IMG_START") {
-                incomingBuffer.current = "";
+        ws.onerror = (error) => {
+            console.error("[DEBUG] WebSocket Error:", error);
+        };
+
+        ws.onmessage = async (event) => {
+            // 1. Log Raw Event Type
+            // console.log("[DEBUG] Received raw data type:", event.data.constructor.name);
+
+            let base64Data = "";
+
+            // CASE 1: Browser gave us a String directly
+            if (typeof event.data === 'string') {
+                base64Data = event.data;
+                // console.log(`[DEBUG] Received STRING length: ${base64Data.length}`);
             }
-            // 3. PROTOCOL: END
-            // If we see "IMG_END", the train has arrived. Display the image.
-            else if (msg === "IMG_END") {
-                const fullImage = incomingBuffer.current;
-                setDebugInfo(`Frame Built: ${fullImage.length} chars`);
-
-                if (imgRef.current && fullImage.startsWith('/9j/')) {
-                    imgRef.current.src = `data:image/jpeg;base64,${fullImage}`;
+            // CASE 2: Browser gave us a Blob (Need to convert)
+            else if (event.data instanceof Blob) {
+                console.log(`[DEBUG] Received BLOB size: ${event.data.size}`);
+                try {
+                    base64Data = await event.data.text();
+                    // console.log(`[DEBUG] Converted Blob to String. Length: ${base64Data.length}`);
+                } catch (err) {
+                    console.error("[DEBUG] Failed to convert Blob to text:", err);
+                    return;
                 }
             }
-            // 4. PROTOCOL: CHUNK
-            // If it's just a piece of text, add it to the bucket.
-            else if (typeof msg === 'string') {
-                incomingBuffer.current += msg;
+
+            // --- DISPLAY LOGIC ---
+            if (base64Data.startsWith('/9j/')) {
+                // Success! It looks like a JPEG
+                console.log(`[DEBUG] Valid JPEG Frame. Length: ${base64Data.length} chars`);
+                setDebugInfo(`Frame: ${base64Data.length} chars`);
+
+                if (imgRef.current) {
+                    imgRef.current.src = `data:image/jpeg;base64,${base64Data}`;
+                }
+            } else {
+                // Failure: It's text, but not an image
+                console.warn("[DEBUG] BAD DATA START:", base64Data.substring(0, 50));
+                setDebugInfo(`Invalid: ${base64Data.substring(0, 15)}...`);
             }
         };
         return () => {
