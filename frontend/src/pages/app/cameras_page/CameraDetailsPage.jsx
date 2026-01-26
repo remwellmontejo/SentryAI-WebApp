@@ -59,12 +59,6 @@ const CameraDetailsPage = () => {
         fetchDetails();
 
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = "sentryai.onrender.com"; // Your Backend URL
-
-        // Connect as "viewer"
-        const wsUrl = `${protocol}//${host}?type=viewer&serial=${serialNumber}`;
-
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = "sentryai.onrender.com";
         const wsUrl = `${protocol}//${host}?type=viewer&serial=${serialNumber}`;
 
