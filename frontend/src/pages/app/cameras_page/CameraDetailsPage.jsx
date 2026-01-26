@@ -71,27 +71,28 @@ const CameraDetailsPage = () => {
         ws.onclose = () => setStatus("Offline");
 
         // 2. Handle Incoming Images
-        ws.onmessage = async (event) => {
-            // --- THE X-RAY DEBUGGER ---
-            if (event.data instanceof Blob) {
-                const size = event.data.size;
+        ws.onmessage = (event) => {
+            // --- BASE64 LOGIC ---
+            // We expect 'event.data' to be a long string starting with "/9j/..."
 
-                // If it's the tiny 8-byte error packet
-                if (size < 100) {
-                    const text = await event.data.text(); // Convert blob to text
-                    console.error("⚠️ RECEIVED TINY PACKET:", text);
-                    setDebugInfo(`Error: Received ${size} bytes. Content: "${text}"`);
-                    return;
+            const data = event.data;
+
+            if (typeof data === 'string') {
+                // Verify it looks like a JPEG (starts with /9j/)
+                if (data.startsWith('/9j/')) {
+                    setDebugInfo(`Frame: ${data.length} chars`);
+                    if (imgRef.current) {
+                        // Directly set the Base64 string as source
+                        imgRef.current.src = `data:image/jpeg;base64,${data}`;
+                    }
+                } else {
+                    // Debug: What did we actually get?
+                    console.log("Received Text:", data);
+                    setDebugInfo(`Msg: ${data.substring(0, 20)}...`);
                 }
-
-                // If it's a real image (usually > 2000 bytes)
-                setDebugInfo(`Receiving Image: ${size} bytes`);
-
-                if (imgRef.current) {
-                    if (imgRef.current.src) URL.revokeObjectURL(imgRef.current.src);
-                    const blob = new Blob([event.data], { type: "image/jpeg" });
-                    imgRef.current.src = URL.createObjectURL(blob);
-                }
+            }
+            else if (data instanceof Blob) {
+                setDebugInfo(`Received Blob (${data.size}) - Expected Text!`);
             }
         };
 
