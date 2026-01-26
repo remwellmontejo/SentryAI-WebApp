@@ -71,36 +71,27 @@ const CameraDetailsPage = () => {
         ws.onclose = () => setStatus("Offline");
 
         // 2. Handle Incoming Images
-        ws.onmessage = (event) => {
-            // 1. Get the Raw Blob
-            const blob = new Blob([event.data], { type: "image/jpeg" });
-
-            // 2. Create a temporary URL for the Blob (blob:https://...)
-            const url = URL.createObjectURL(blob);
-
-            // 3. Update the Image Tag directly
-            if (imgRef.current) {
-                // Free memory from the PREVIOUS frame
-                if (imgRef.current.src) {
-                    URL.revokeObjectURL(imgRef.current.src);
-                }
-                imgRef.current.src = url;
-            }
-
-            console.log("Received:", event.data); // Should say "Blob { size: 12345, type: ... }"
-
+        ws.onmessage = async (event) => {
+            // --- THE X-RAY DEBUGGER ---
             if (event.data instanceof Blob) {
-                // Revoke previous URL to stop memory leaks
-                if (imgRef.current.src) URL.revokeObjectURL(imgRef.current.src);
+                const size = event.data.size;
 
-                // Force JPEG type
-                const blob = new Blob([event.data], { type: "image/jpeg" });
-                const url = URL.createObjectURL(blob);
+                // If it's the tiny 8-byte error packet
+                if (size < 100) {
+                    const text = await event.data.text(); // Convert blob to text
+                    console.error("⚠️ RECEIVED TINY PACKET:", text);
+                    setDebugInfo(`Error: Received ${size} bytes. Content: "${text}"`);
+                    return;
+                }
 
-                console.log("Generated URL:", url); // Should be "blob:http://localhost..."
-                imgRef.current.src = url;
-            } else {
-                console.warn("Received non-blob data:", event.data);
+                // If it's a real image (usually > 2000 bytes)
+                setDebugInfo(`Receiving Image: ${size} bytes`);
+
+                if (imgRef.current) {
+                    if (imgRef.current.src) URL.revokeObjectURL(imgRef.current.src);
+                    const blob = new Blob([event.data], { type: "image/jpeg" });
+                    imgRef.current.src = URL.createObjectURL(blob);
+                }
             }
         };
 
