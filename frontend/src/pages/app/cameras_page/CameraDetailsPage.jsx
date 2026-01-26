@@ -64,39 +64,43 @@ const CameraDetailsPage = () => {
         // Connect as "viewer"
         const wsUrl = `${protocol}//${host}?type=viewer&serial=${serialNumber}`;
 
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = "sentryai.onrender.com";
+        const wsUrl = `${protocol}//${host}?type=viewer&serial=${serialNumber}`;
+
         console.log("Connecting to:", wsUrl);
         const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
 
         ws.onopen = () => setStatus("Live");
         ws.onclose = () => setStatus("Offline");
 
-        // 2. Handle Incoming Images
-        ws.onmessage = (event) => {
-            // --- BASE64 LOGIC ---
-            // We expect 'event.data' to be a long string starting with "/9j/..."
+        ws.onmessage = async (event) => {
+            let base64Data = "";
 
-            const data = event.data;
-
-            if (typeof data === 'string') {
-                // Verify it looks like a JPEG (starts with /9j/)
-                if (data.startsWith('/9j/')) {
-                    setDebugInfo(`Frame: ${data.length} chars`);
-                    if (imgRef.current) {
-                        // Directly set the Base64 string as source
-                        imgRef.current.src = `data:image/jpeg;base64,${data}`;
-                    }
-                } else {
-                    // Debug: What did we actually get?
-                    console.log("Received Text:", data);
-                    setDebugInfo(`Msg: ${data.substring(0, 20)}...`);
-                }
+            // CASE 1: The browser gave us a text string directly
+            if (typeof event.data === 'string') {
+                base64Data = event.data;
             }
-            else if (data instanceof Blob) {
-                setDebugInfo(`Received Blob (${data.size}) - Expected Text!`);
+            // CASE 2: The browser gave us a Blob (even though it's text)
+            else if (event.data instanceof Blob) {
+                // We must "read" the text inside the blob
+                base64Data = await event.data.text();
+            }
+
+            // --- DISPLAY LOGIC ---
+            if (base64Data.startsWith('/9j/')) {
+                setDebugInfo(`Received Image: ${base64Data.length} chars`);
+
+                if (imgRef.current) {
+                    // We MUST add the header so the browser knows it's an image
+                    imgRef.current.src = `data:image/jpeg;base64,${base64Data}`;
+                }
+            } else {
+                // Debugging: What did we get if not an image?
+                console.warn("Bad Data:", base64Data.substring(0, 50));
+                setDebugInfo(`Invalid Data: ${base64Data.substring(0, 15)}...`);
             }
         };
-
         return () => {
             if (ws.readyState === 1) ws.close();
         };
