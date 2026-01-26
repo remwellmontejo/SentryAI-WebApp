@@ -73,6 +73,7 @@ const CameraDetailsPage = () => {
 
             // CASE 1: The browser gave us a text string directly
             if (typeof event.data === 'string') {
+                console.log("Received Text:", event.data);
                 base64Data = event.data;
             }
             // CASE 2: The browser gave us a Blob (even though it's text)
@@ -83,6 +84,7 @@ const CameraDetailsPage = () => {
 
             // --- DISPLAY LOGIC ---
             if (base64Data.startsWith('/9j/')) {
+                console.log("Received length:", base64Data.length);
                 setDebugInfo(`Received Image: ${base64Data.length} chars`);
 
                 if (imgRef.current) {
