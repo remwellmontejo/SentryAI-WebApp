@@ -64,37 +64,33 @@ const CameraDetailsPage = () => {
 
         console.log("Connecting to:", wsUrl);
         const ws = new WebSocket(wsUrl);
+        const incomingBuffer = useRef("");
 
         ws.onopen = () => setStatus("Live");
         ws.onclose = () => setStatus("Offline");
 
-        ws.onmessage = async (event) => {
-            let base64Data = "";
+        ws.onmessage = (event) => {
+            const msg = event.data;
 
-            // CASE 1: The browser gave us a text string directly
-            if (typeof event.data === 'string') {
-                base64Data = event.data;
-                console.log("Received Text:", base64Data);
+            // 2. PROTOCOL: START
+            // If we see "IMG_START", we know a new image is coming. Clear the bucket.
+            if (msg === "IMG_START") {
+                incomingBuffer.current = "";
             }
-            // CASE 2: The browser gave us a Blob (even though it's text)
-            else if (event.data instanceof Blob) {
-                // We must "read" the text inside the blob
-                base64Data = await event.data.text();
-            }
+            // 3. PROTOCOL: END
+            // If we see "IMG_END", the train has arrived. Display the image.
+            else if (msg === "IMG_END") {
+                const fullImage = incomingBuffer.current;
+                setDebugInfo(`Frame Built: ${fullImage.length} chars`);
 
-            // --- DISPLAY LOGIC ---
-            if (base64Data.startsWith('/9j/')) {
-                console.log("Received length:", base64Data.length);
-                setDebugInfo(`Received Image: ${base64Data.length} chars`);
-
-                if (imgRef.current) {
-                    // We MUST add the header so the browser knows it's an image
-                    imgRef.current.src = `data:image/jpeg;base64,${base64Data}`;
+                if (imgRef.current && fullImage.startsWith('/9j/')) {
+                    imgRef.current.src = `data:image/jpeg;base64,${fullImage}`;
                 }
-            } else {
-                // Debugging: What did we get if not an image?
-                console.warn("Bad Data:", base64Data.substring(0, 50));
-                setDebugInfo(`Invalid Data: ${base64Data.substring(0, 15)}...`);
+            }
+            // 4. PROTOCOL: CHUNK
+            // If it's just a piece of text, add it to the bucket.
+            else if (typeof msg === 'string') {
+                incomingBuffer.current += msg;
             }
         };
         return () => {
