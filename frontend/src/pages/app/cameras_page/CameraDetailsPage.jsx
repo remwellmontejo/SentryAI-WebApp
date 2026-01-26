@@ -73,8 +73,8 @@ const CameraDetailsPage = () => {
 
             // CASE 1: The browser gave us a text string directly
             if (typeof event.data === 'string') {
-                console.log("Received Text:", event.data);
                 base64Data = event.data;
+                console.log("Received Text:", base64Data);
             }
             // CASE 2: The browser gave us a Blob (even though it's text)
             else if (event.data instanceof Blob) {
