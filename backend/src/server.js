@@ -12,9 +12,6 @@ import authRoutes from './routes/AuthRoutes.js';
 import cameraRoutes from './routes/CameraRoutes.js';
 
 const app = express();
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
-const viewers = new Map();
 const __dirname = path.resolve();
 dotenv.config();
 
@@ -23,7 +20,7 @@ if (process.env.NODE_ENV !== 'production') {
         origin: 'http://localhost:5173',
     }));
 }
-
+app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use(
@@ -51,34 +48,51 @@ if (process.env.NODE_ENV === 'production') {
     app.get(/.*/, (req, res) => {
         res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
     });
-
-
 }
 
-wss.on('connection', (ws, req) => {
-    const urlParams = new URLSearchParams(req.url.split('?')[1]);
-    const type = urlParams.get('type');
-    const serial = urlParams.get('serial');
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+const streams = new Map();
 
-    console.log(`[WS] New Connection: ${type} ${serial}`);
+wss.on('connection', (ws, req) => {
+    // Parse URL: wss://url.com?type=camera&serial=123
+    const params = new URLSearchParams(req.url.split('?')[1]);
+    const type = params.get('type');
+    const serial = params.get('serial');
+
+    if (!serial) {
+        ws.close();
+        return;
+    }
+
+    console.log(`[WS] New ${type} connected: ${serial}`);
 
     if (type === 'camera') {
+        // --- CAMERA LOGIC ---
         ws.on('message', (message) => {
-            const cameraViewers = viewers.get(serial) || [];
-            cameraViewers.forEach(viewerWs => {
-                if (viewerWs.readyState === WebSocket.OPEN) {
-                    viewerWs.send(message);
-                }
-            });
+            // 'message' is raw binary data (JPEG)
+            // Broadcast this frame to all viewers of THIS serial
+            if (streams.has(serial)) {
+                streams.get(serial).forEach(viewer => {
+                    if (viewer.readyState === 1) { // 1 = OPEN
+                        viewer.send(message);
+                    }
+                });
+            }
         });
 
     } else if (type === 'viewer') {
-        if (!viewers.has(serial)) viewers.set(serial, []);
-        viewers.get(serial).push(ws);
+        // --- VIEWER LOGIC ---
+        if (!streams.has(serial)) {
+            streams.set(serial, new Set());
+        }
+        streams.get(serial).add(ws);
 
+        // Remove viewer on disconnect
         ws.on('close', () => {
-            const list = viewers.get(serial) || [];
-            viewers.set(serial, list.filter(v => v !== ws));
+            if (streams.has(serial)) {
+                streams.get(serial).delete(ws);
+            }
         });
     }
 });

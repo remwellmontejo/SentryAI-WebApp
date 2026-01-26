@@ -41,9 +41,9 @@ const CameraDetailsPage = () => {
     const navigate = useNavigate();
     const [cameraData, setCameraData] = useState([]);
 
-    const [isConnected, setIsConnected] = useState(false);
-    const imgRef = useRef(null); // Reference to the <img> tag
-    const wsRef = useRef(null);  // Reference to WebSocket
+    const [status, setStatus] = useState("Disconnected");
+    const imgRef = useRef(null);
+    const wsRef = useRef(null);
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -57,40 +57,39 @@ const CameraDetailsPage = () => {
         };
         fetchDetails();
 
-        // 1. Connect to WebSocket
-        // Note: If your site is https, use wss. If http, use ws.
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//sentryai.onrender.com?type=viewer&serial=${serialNumber}`;
+        const host = "sentryai.onrender.com"; // Your Backend URL
 
+        // Connect as "viewer"
+        const wsUrl = `${protocol}//${host}?type=viewer&serial=${serialNumber}`;
+
+        console.log("Connecting to:", wsUrl);
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
-        ws.onopen = () => {
-            console.log("Connected to Stream");
-            setIsConnected(true);
-        };
+        ws.onopen = () => setStatus("Live");
+        ws.onclose = () => setStatus("Offline");
 
         // 2. Handle Incoming Images
         ws.onmessage = (event) => {
-            // The message is a Blob (Binary Image)
+            // 1. Get the Raw Blob
             const blob = event.data;
 
-            // Create a temporary URL for the Blob
-            const imageUrl = URL.createObjectURL(blob);
+            // 2. Create a temporary URL for the Blob (blob:https://...)
+            const url = URL.createObjectURL(blob);
 
-            // Update the image source directly (Fast!)
+            // 3. Update the Image Tag directly
             if (imgRef.current) {
-                // Revoke the old URL to free memory
-                if (imgRef.current.src) URL.revokeObjectURL(imgRef.current.src);
-                imgRef.current.src = imageUrl;
+                // Free memory from the PREVIOUS frame
+                if (imgRef.current.src) {
+                    URL.revokeObjectURL(imgRef.current.src);
+                }
+                imgRef.current.src = url;
             }
         };
 
-        ws.onclose = () => setIsConnected(false);
-
-        // Cleanup on Unmount
         return () => {
-            if (ws.readyState === WebSocket.OPEN) ws.close();
+            if (ws.readyState === 1) ws.close();
         };
     }, [serialNumber]);
 
@@ -115,15 +114,10 @@ const CameraDetailsPage = () => {
                             className="w-full h-full object-contain"
                         />
 
-                        {/* Overlays */}
-                        {!isConnected && (
-                            <div className="absolute text-white font-bold">Connecting...</div>
-                        )}
-                        {isConnected && (
-                            <div className="absolute top-2 right-2 bg-red-600 text-white text-[10px] px-2 py-1 rounded animate-pulse">
-                                LIVE
-                            </div>
-                        )}
+                        {/* Status Overlay */}
+                        <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900 bg-opacity-75 text-white text-xs rounded">
+                            Status: {status}
+                        </div>
                     </div>
 
                     {/* ================= RIGHT COLUMN: CAMERA DETAILS ================= */}
