@@ -45,6 +45,7 @@ const CameraDetailsPage = () => {
     const [debugInfo, setDebugInfo] = useState("Waiting...");
     const imgRef = useRef(null);
     const wsRef = useRef(null);
+    const incomingBuffer = useRef("");
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -64,7 +65,6 @@ const CameraDetailsPage = () => {
 
         console.log("Connecting to:", wsUrl);
         const ws = new WebSocket(wsUrl);
-        const incomingBuffer = useRef("");
 
         ws.onopen = () => setStatus("Live");
         ws.onclose = () => setStatus("Offline");
