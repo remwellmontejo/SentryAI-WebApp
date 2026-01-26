@@ -42,6 +42,7 @@ const CameraDetailsPage = () => {
     const [cameraData, setCameraData] = useState([]);
 
     const [status, setStatus] = useState("Disconnected");
+    const [debugInfo, setDebugInfo] = useState("Waiting...");
     const imgRef = useRef(null);
     const wsRef = useRef(null);
 
