@@ -73,7 +73,7 @@ const CameraDetailsPage = () => {
         // 2. Handle Incoming Images
         ws.onmessage = (event) => {
             // 1. Get the Raw Blob
-            const blob = event.data;
+            const blob = new Blob([event.data], { type: "image/jpeg" });
 
             // 2. Create a temporary URL for the Blob (blob:https://...)
             const url = URL.createObjectURL(blob);
@@ -85,6 +85,22 @@ const CameraDetailsPage = () => {
                     URL.revokeObjectURL(imgRef.current.src);
                 }
                 imgRef.current.src = url;
+            }
+
+            console.log("Received:", event.data); // Should say "Blob { size: 12345, type: ... }"
+
+            if (event.data instanceof Blob) {
+                // Revoke previous URL to stop memory leaks
+                if (imgRef.current.src) URL.revokeObjectURL(imgRef.current.src);
+
+                // Force JPEG type
+                const blob = new Blob([event.data], { type: "image/jpeg" });
+                const url = URL.createObjectURL(blob);
+
+                console.log("Generated URL:", url); // Should be "blob:http://localhost..."
+                imgRef.current.src = url;
+            } else {
+                console.warn("Received non-blob data:", event.data);
             }
         };
 
