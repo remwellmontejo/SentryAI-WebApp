@@ -44,8 +44,7 @@ const CameraDetailsPage = () => {
     const [status, setStatus] = useState("Disconnected");
     const [debugInfo, setDebugInfo] = useState("Waiting...");
     const imgRef = useRef(null);
-    const wsRef = useRef(null);
-    const incomingBuffer = useRef("");
+    const previousUrl = useRef(null);
 
     useEffect(() => {
         const fetchDetails = async () => {
