@@ -65,6 +65,7 @@ const CameraDetailsPage = () => {
 
         console.log(`[DEBUG] Connecting to: ${wsUrl}`);
         const ws = new WebSocket(wsUrl);
+        ws.binaryType = "blob";
 
         ws.onopen = () => {
             console.log("[DEBUG] WebSocket Connected");
@@ -80,45 +81,35 @@ const CameraDetailsPage = () => {
             console.error("[DEBUG] WebSocket Error:", error);
         };
 
-        ws.onmessage = async (event) => {
-            let base64Data = "";
+        ws.onmessage = (event) => {
+            // We expect a Blob (Binary Image)
+            if (event.data instanceof Blob) {
+                const blob = event.data;
+                setDebugInfo(`Frame: ${blob.size} bytes`);
 
-            // 1. Handle incoming data (String or Blob)
-            if (typeof event.data === 'string') {
-                base64Data = event.data;
-            }
-            else if (event.data instanceof Blob) {
-                try {
-                    base64Data = await event.data.text();
-                } catch (err) {
-                    console.error("Error reading Blob:", err);
-                    return;
+                // 1. Clean up the previous frame's memory
+                if (previousUrl.current) {
+                    URL.revokeObjectURL(previousUrl.current);
                 }
-            }
 
-            // 2. Clean whitespace (Crucial fix for some transmission errors)
-            base64Data = base64Data.trim();
+                // 2. Create a new URL for this frame
+                const newUrl = URL.createObjectURL(blob);
+                previousUrl.current = newUrl;
 
-            // 3. Display Logic
-            // Check for the JPEG Header (/9j/)
-            if (base64Data.startsWith('/9j/')) {
-
-                // Debug logs (Uncomment if needed)
-                // console.log(`[DEBUG] Valid JPEG: ${base64Data.length} chars`);
-                setDebugInfo(`Frame: ${base64Data.length} chars`);
-
+                // 3. Update the image source
                 if (imgRef.current) {
-                    // Direct assignment - Browser handles the rendering
-                    imgRef.current.src = `data:image/jpeg;base64,${base64Data}`;
+                    imgRef.current.src = newUrl;
                 }
-            } else {
-                // If we get garbage text, show us what it is
-                console.warn("Invalid Data Received:", base64Data.substring(0, 50));
-                setDebugInfo(`Invalid: ${base64Data.substring(0, 15)}...`);
+            }
+            else {
+                console.warn("Received non-blob data:", event.data);
             }
         };
+
         return () => {
             if (ws.readyState === 1) ws.close();
+            // Cleanup last frame on unmount
+            if (previousUrl.current) URL.revokeObjectURL(previousUrl.current);
         };
     }, [serialNumber]);
 
@@ -136,12 +127,19 @@ const CameraDetailsPage = () => {
 
                     {/* ================= LEFT COLUMN: LIVE STREAM ================= */}
                     <div className="relative w-full h-full bg-black rounded-xl overflow-hidden flex items-center justify-center">
+
+                        <div className="flex justify-between mb-2 text-xs font-mono">
+                            <span>Status: {status}</span>
+                            <span className="text-yellow-400">{debugInfo}</span>
+                        </div>
                         {/* The Image Element */}
-                        <img
-                            ref={imgRef}
-                            alt="Live Stream"
-                            className="w-full h-full object-contain"
-                        />
+                        <div className="bg-black flex justify-center items-center border border-gray-700" style={{ minHeight: '300px' }}>
+                            <img
+                                ref={imgRef}
+                                alt="Stream"
+                                className="w-[240px] h-[240px] object-cover object-center block"
+                            />
+                        </div>
 
                         {/* Status Overlay */}
                         <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900 bg-opacity-75 text-white text-xs rounded">
