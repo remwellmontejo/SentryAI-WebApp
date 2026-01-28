@@ -84,7 +84,7 @@ const CameraDetailsPage = () => {
             // We expect a Blob (Binary Image)
             if (event.data instanceof Blob) {
                 const blob = event.data;
-                setDebugInfo(`Frame: ${blob.size} bytes`);
+                setDebugInfo("Live");
 
                 // 1. Clean up the previous frame's memory
                 if (previousUrl.current) {
@@ -126,23 +126,15 @@ const CameraDetailsPage = () => {
 
                     {/* ================= LEFT COLUMN: LIVE STREAM ================= */}
                     <div className="relative w-full h-full bg-black rounded-xl overflow-hidden flex items-center justify-center">
-
-                        <div className="flex justify-between mb-2 text-xs font-mono">
-                            <span>Status: {status}</span>
-                            <span className="text-yellow-400">{debugInfo}</span>
-                        </div>
                         {/* The Image Element */}
-                        <div className="bg-black flex justify-center items-center border border-gray-700" style={{ minHeight: '300px' }}>
-                            <img
-                                ref={imgRef}
-                                alt="Stream"
-                                className="w-[240px] h-[240px] object-cover object-center block"
-                            />
-                        </div>
-
+                        <img
+                            ref={imgRef}
+                            alt="Stream"
+                            className="w-full aspect-square object-cover object-center block"
+                        />
                         {/* Status Overlay */}
                         <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900 bg-opacity-75 text-white text-xs rounded">
-                            Status: {status}
+                            Status: {debugInfo}
                         </div>
                     </div>
 
