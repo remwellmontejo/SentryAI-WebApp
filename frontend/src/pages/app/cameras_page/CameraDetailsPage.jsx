@@ -81,40 +81,39 @@ const CameraDetailsPage = () => {
         };
 
         ws.onmessage = async (event) => {
-            // 1. Log Raw Event Type
-            // console.log("[DEBUG] Received raw data type:", event.data.constructor.name);
-
             let base64Data = "";
 
-            // CASE 1: Browser gave us a String directly
+            // 1. Handle incoming data (String or Blob)
             if (typeof event.data === 'string') {
                 base64Data = event.data;
-                // console.log(`[DEBUG] Received STRING length: ${base64Data.length}`);
             }
-            // CASE 2: Browser gave us a Blob (Need to convert)
             else if (event.data instanceof Blob) {
-                console.log(`[DEBUG] Received BLOB size: ${event.data.size}`);
                 try {
                     base64Data = await event.data.text();
-                    // console.log(`[DEBUG] Converted Blob to String. Length: ${base64Data.length}`);
                 } catch (err) {
-                    console.error("[DEBUG] Failed to convert Blob to text:", err);
+                    console.error("Error reading Blob:", err);
                     return;
                 }
             }
 
-            // --- DISPLAY LOGIC ---
+            // 2. Clean whitespace (Crucial fix for some transmission errors)
+            base64Data = base64Data.trim();
+
+            // 3. Display Logic
+            // Check for the JPEG Header (/9j/)
             if (base64Data.startsWith('/9j/')) {
-                // Success! It looks like a JPEG
-                console.log(`[DEBUG] Valid JPEG Frame. Length: ${base64Data.length} chars`);
+
+                // Debug logs (Uncomment if needed)
+                // console.log(`[DEBUG] Valid JPEG: ${base64Data.length} chars`);
                 setDebugInfo(`Frame: ${base64Data.length} chars`);
 
                 if (imgRef.current) {
+                    // Direct assignment - Browser handles the rendering
                     imgRef.current.src = `data:image/jpeg;base64,${base64Data}`;
                 }
             } else {
-                // Failure: It's text, but not an image
-                console.warn("[DEBUG] BAD DATA START:", base64Data.substring(0, 50));
+                // If we get garbage text, show us what it is
+                console.warn("Invalid Data Received:", base64Data.substring(0, 50));
                 setDebugInfo(`Invalid: ${base64Data.substring(0, 15)}...`);
             }
         };
