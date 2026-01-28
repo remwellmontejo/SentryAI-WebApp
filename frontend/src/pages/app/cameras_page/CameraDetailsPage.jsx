@@ -130,7 +130,7 @@ const CameraDetailsPage = () => {
                         <img
                             ref={imgRef}
                             alt="Stream"
-                            className="w-[60%] aspect-square object-cover object-center block"
+                            className="w-full aspect-square object-cover object-center block"
                         />
                         {/* Status Overlay */}
                         <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900 bg-opacity-75 text-white text-xs rounded">
