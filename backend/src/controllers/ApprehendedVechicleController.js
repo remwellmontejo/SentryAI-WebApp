@@ -12,32 +12,54 @@ export async function getAllApprehendedVehicles(req, res) {
 
 export async function createApprehendedVehicle(req, res) {
     try {
+        const imageBuffer = req.body;
+
+        if (!Buffer.isBuffer(imageBuffer) || imageBuffer.length === 0) {
+            console.error("[ERROR] No image binary received in body");
+            return res.status(400).json({ msg: "Missing image binary data" });
+        }
+
+        const rawMetadata = req.headers['x-metadata'];
+        if (!rawMetadata) {
+            console.error("[ERROR] Missing 'X-Metadata' header");
+            return res.status(400).json({ msg: "Missing X-Metadata header" });
+        }
+
+        // Parse the JSON string back into an Object
+        let metadata;
+        try {
+            metadata = JSON.parse(rawMetadata);
+        } catch (e) {
+            return res.status(400).json({ msg: "Invalid JSON in X-Metadata" });
+        }
+
+        // Destructure fields
         const {
             vehicleType,
-            plateNumber,
             confidenceScore,
             x_coordinate,
             y_coordinate,
-            sceneImageBase64,
-        } = req.body;
+            plateNumber
+        } = metadata;
 
-        if (!vehicleType || !sceneImageBase64 || !x_coordinate || !confidenceScore || !y_coordinate) {
-            return res.status(400).json({ msg: "Missing required fields (type, img, or coords)" });
-        }
+        const base64Data = imageBuffer.toString('base64');
         const newApprehendedVehicle = new ApprehendedVehicle({
             vehicleType,
-            plateNumber: plateNumber || "NO PLATE NUMBER FOUND",
+            plateNumber: plateNumber || "PENDING_VERIFICATION",
             confidenceScore,
             x_coordinate,
             y_coordinate,
-            sceneImageBase64,
+            sceneImageBase64: base64Data,
             status: 'Pending'
         });
+
         await newApprehendedVehicle.save();
-        res.status(200).json({ message: 'Apprehended vehicle created!' });
-    }
-    catch (error) {
-        console.error(`[ERROR] Upload Failed: ${error.message}`);
+
+        console.log(`[SUCCESS] Saved Apprehension ID: ${newApprehendedVehicle._id}`);
+        res.status(200).json({ message: 'Apprehended vehicle created successfully!' });
+
+    } catch (error) {
+        console.error(`[ERROR] Server Error: ${error.message}`);
         res.status(500).json({ message: 'Server error' });
     }
 }

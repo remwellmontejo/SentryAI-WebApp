@@ -21,6 +21,10 @@ if (process.env.NODE_ENV !== 'production') {
     }));
 }
 app.use(cors({ origin: '*' }));
+app.use(express.raw({
+    type: 'image/jpeg',
+    limit: '50mb'
+}));
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use(
@@ -30,6 +34,7 @@ app.use(
         parameterLimit: 300000,
     }),
 );
+
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");

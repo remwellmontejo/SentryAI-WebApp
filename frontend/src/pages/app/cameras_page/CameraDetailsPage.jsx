@@ -40,8 +40,8 @@ const CameraDetailsPage = () => {
     const { serialNumber } = useParams();
     const navigate = useNavigate();
     const [cameraData, setCameraData] = useState([]);
-
     const [status, setStatus] = useState("Disconnected");
+    const [hasImage, setHasImage] = useState(false);
     const [debugInfo, setDebugInfo] = useState("Waiting...");
     const imgRef = useRef(null);
     const previousUrl = useRef(null);
@@ -125,16 +125,31 @@ const CameraDetailsPage = () => {
                 <div className="grid lg:grid-cols-2 gap-8 lg:items-center">
 
                     {/* ================= LEFT COLUMN: LIVE STREAM ================= */}
-                    <div className="relative w-full h-full bg-black rounded-xl overflow-hidden flex items-center justify-center">
-                        {/* The Image Element */}
-                        <img
-                            ref={imgRef}
-                            alt="Stream"
-                            className="w-full aspect-square object-cover object-center block"
-                        />
-                        {/* Status Overlay */}
-                        <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900 bg-opacity-75 text-white text-xs rounded">
-                            Status: {debugInfo}
+                    <div className="flex items-center justify-center w-full">
+                        {/* 1. Added 'flex flex-col' to stack items vertically */}
+                        {/* 2. Removed 'items-center' so the Title stays Left */}
+                        <div className="w-full flex flex-col gap-2">
+
+                            {/* Title Section (Naturally aligns left) */}
+                            <div className="w-full text-left">
+                                <h1 className="text-3xl font-extrabold text-gray-900">Live Feed</h1>
+                            </div>
+
+                            {/* Stream Section */}
+                            {/* 3. Added 'mx-auto' to center ONLY this element */}
+                            <div className="mx-auto relative w-full aspect-square bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-lg">
+                                <img
+                                    ref={imgRef}
+                                    alt="Stream"
+                                    className={`w-full aspect-square object-cover object-center ${hasImage ? 'block' : 'hidden'}`} // Toggle hidden/block
+                                    onLoad={() => setHasImage(true)}   // Show when image loads successfully
+                                    onError={() => setHasImage(false)} // Hide if image breaks/is empty
+                                />
+                                {/* Status Overlay */}
+                                <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900 bg-opacity-75 text-white text-xs rounded font-mono">
+                                    {debugInfo}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
