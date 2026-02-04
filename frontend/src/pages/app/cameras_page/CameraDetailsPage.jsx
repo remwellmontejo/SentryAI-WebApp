@@ -3,8 +3,10 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
 import React, { useState, useEffect, useRef } from 'react';
 import api from "../../../lib/axios.js";
-import { Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle, Edit, Settings, Trash2 } from "lucide-react";
+import { useCameraStatus } from "../../../hooks/useCameraStatus";
+import { CheckCircle, XCircle } from "lucide-react";
 import { useParams } from "react-router";
+import BoundingPolygonOverlay from "../../../components/BoundingPolygonOverlay";
 
 // ================= CONFIGURATION =================
 const getStatusStyle = (status) => {
@@ -40,11 +42,11 @@ const CameraDetailsPage = () => {
     const { serialNumber } = useParams();
     const navigate = useNavigate();
     const [cameraData, setCameraData] = useState([]);
-    const [status, setStatus] = useState("Disconnected");
     const [hasImage, setHasImage] = useState(false);
     const [debugInfo, setDebugInfo] = useState("Waiting...");
     const imgRef = useRef(null);
     const previousUrl = useRef(null);
+    const isOnline = useCameraStatus(cameraData?.lastSeen);
 
     useEffect(() => {
         const fetchDetails = async () => {
@@ -145,8 +147,25 @@ const CameraDetailsPage = () => {
                                     onLoad={() => setHasImage(true)}   // Show when image loads successfully
                                     onError={() => setHasImage(false)} // Hide if image breaks/is empty
                                 />
-                                {/* Status Overlay */}
-                                <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900 bg-opacity-75 text-white text-xs rounded font-mono">
+                                {/* 2. The Overlay Component (Placed Immediately After Image) */}
+                                {/* Only render if cameraData is loaded */}
+                                {cameraData && (
+                                    <BoundingPolygonOverlay
+                                        polyX={cameraData.config?.polyX}
+                                        polyY={cameraData.config?.polyY}
+                                        zoneEnabled={cameraData.config?.zoneEnabled}
+                                    />
+                                )}
+
+                                {/* 3. Waiting Placeholder */}
+                                {!hasImage && (
+                                    <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                                        <p>Waiting for Stream...</p>
+                                    </div>
+                                )}
+
+                                {/* 4. Debug Info Badge */}
+                                <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900 bg-opacity-75 text-white text-xs rounded font-mono z-20">
                                     {debugInfo}
                                 </div>
                             </div>
@@ -160,13 +179,28 @@ const CameraDetailsPage = () => {
                             {/* Card Header: Type & Status */}
                             <div className="p-6 border-b border-gray-200 bg-gray-50">
                                 <div className="flex justify-between items-start">
+                                    {/* Left Side: Title */}
                                     <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Camera</p>
                                         <h1 className="text-3xl font-extrabold text-gray-900">{cameraData.name}</h1>
                                     </div>
-                                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${getStatusStyle(cameraData.status)}`}>
-                                        {getStatusIcon(cameraData.status)}
-                                        <span className="font-bold text-xs uppercase tracking-wide">{cameraData.status}</span>
+
+                                    {/* Right Side: Status Badge + Conditional Last Seen */}
+                                    <div className="flex flex-col items-end gap-1">
+                                        {/* 1. The Status Pill */}
+                                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${getStatusStyle(isOnline ? 'online' : 'offline')}`}>
+                                            {getStatusIcon(isOnline ? 'online' : 'offline')}
+                                            <span className="font-bold text-xs uppercase tracking-wide">
+                                                {isOnline ? 'Online' : 'Offline'}
+                                            </span>
+                                        </div>
+
+                                        {/* 2. The Conditional Last Seen Text */}
+                                        {!isOnline && (
+                                            <span className="text-xs font-medium text-gray-500">
+                                                Last seen {formatDateAndTime(cameraData.lastSeen)}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -184,45 +218,14 @@ const CameraDetailsPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Date & Time */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100">
-                                        <div className="flex items-cen  ter gap-2 text-blue-600 mb-1">
-                                            <Calendar size={16} />
-                                            <span className="text-xs font-bold uppercase">Last Online</span>
-                                        </div>
-                                        <p className="text-base font-semibold text-gray-700">{formatDateAndTime(cameraData.lastSeen)}</p>
-                                    </div>
-                                </div>
-
                                 {/* Metadata */}
-                                <div className="grid grid-rows-2 gap-y-2 pt-4 border-t border-gray-100">
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Configurations</p>
+                                <div className="pt-4 border-t border-gray-100">
                                     <div>
-                                        <span className="text-xs text-gray-400 uppercase block mb-1">Confidence Level</span>
-                                        <span className="font-medium text-gray-700"></span>
-                                    </div>
-                                    <div>
-                                        <span className="text-xs text-gray-400 uppercase block mb-1">Centroid Location</span>
-                                        <div className="flex items-center gap-1 text-gray-600 font-mono text-sm">
-
-                                        </div>
+                                        <span className="text-xs text-gray-400 uppercase block mb-1">Apprehension Timer</span>
+                                        <span className="font-medium text-gray-700">{cameraData?.config?.apprehensionTimer} seconds</span>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Card Footer: Action Buttons */}
-                            <div className="p-4 bg-gray-50 border-t border-gray-200">
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button className="flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-700 font-semibold py-2.5 px-4 rounded-lg border border-gray-300 shadow-sm transition-all hover:shadow-md text-sm">
-                                        <Edit size={16} /> Edit Details
-                                    </button>
-                                    <button className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-all hover:shadow-md text-sm">
-                                        <Trash2 size={16} /> Delete Record
-                                    </button>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
                 </div>

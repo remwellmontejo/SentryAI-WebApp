@@ -144,7 +144,7 @@ wss.on('connection', async (ws, req) => {
                             { serialNumber: serial },
                             {
                                 lastSeen: new Date(),
-                                status: 'online'
+                                //status: 'online'
                             }
                         );
                     }
