@@ -17,7 +17,7 @@ const getCameraDetails = async (req, res) => {
 
 // @desc    Update Camera Configuration
 // @route   PUT /api/cameras/config/:serial
-export const updateCameraConfig = async (req, res) => {
+const updateCameraConfig = async (req, res) => {
     const { serial } = req.params;
 
     // Destructure config fields from request body
