@@ -40,6 +40,13 @@ app.use(
     }),
 );
 
+app.use("/api/apprehended-vehicle", apprehendedCarRoutes);
+app.use("/auth", authRoutes);
+app.use("/api/cameras", cameraRoutes);
+
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -61,13 +68,6 @@ app.use((req, res, next) => {
     req.streams = streams;
     next();
 });
-
-app.use("/api/apprehended-vehicle", apprehendedCarRoutes);
-app.use("/auth", authRoutes);
-app.use("/api/cameras", cameraRoutes);
-
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
 
 // --- WEBSOCKET LOGIC ---
 wss.on('connection', async (ws, req) => {
