@@ -10,13 +10,14 @@ const CameraSchema = new mongoose.Schema({
 
     // --- CONFIGURATION (Per Camera) ---
     config: {
-        streamActive: { type: Boolean, default: false }, // Toggle specific stream
+        streamEnabled: { type: Boolean, default: false },
         apprehensionTimer: { type: Number, default: 3000 },
-
-        // Zone Settings (Quadrilateral)
+        streamResolution: { type: Number, default: 1 },
         zoneEnabled: { type: Boolean, default: false },
         polyX: { type: [Number], default: [0, 100, 100, 0] },
-        polyY: { type: [Number], default: [0, 0, 100, 100] }
+        polyY: { type: [Number], default: [0, 0, 100, 100] },
+        servoPan: { type: Number, default: 90 },
+        servoTilt: { type: Number, default: 90 },
     }
 });
 

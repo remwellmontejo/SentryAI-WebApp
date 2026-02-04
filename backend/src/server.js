@@ -10,10 +10,15 @@ import apprehendedCarRoutes from './routes/ApprehendedVehicleRoutes.js';
 import connectDB from './config/db.js';
 import authRoutes from './routes/AuthRoutes.js';
 import cameraRoutes from './routes/CameraRoutes.js';
+import Camera from './models/Camera.js';
 
 const app = express();
 const __dirname = path.resolve();
 dotenv.config();
+
+// --- GLOBAL WEBSOCKET MAPS ---
+const streams = new Map();       // Viewer Sockets: Serial -> Set<WebSocket>
+const cameraClients = new Map(); // Camera Sockets: Serial -> WebSocket
 
 if (process.env.NODE_ENV !== 'production') {
     app.use(cors({
@@ -42,11 +47,6 @@ app.use((req, res, next) => {
     next();
 });
 
-
-app.use("/api/apprehended-vehicle", apprehendedCarRoutes);
-app.use("/auth", authRoutes);
-app.use("/api/cameras", cameraRoutes);
-
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
@@ -55,12 +55,23 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 
+app.use((req, res, next) => {
+    // This allows the Controller to find the socket and send data
+    req.cameraClients = cameraClients;
+    req.streams = streams;
+    next();
+});
+
+app.use("/api/apprehended-vehicle", apprehendedCarRoutes);
+app.use("/auth", authRoutes);
+app.use("/api/cameras", cameraRoutes);
+
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
-const streams = new Map();
 
-wss.on('connection', (ws, req) => {
-    // Parse URL: wss://url.com?type=camera&serial=123
+// --- WEBSOCKET LOGIC ---
+wss.on('connection', async (ws, req) => {
+    // Parse URL: wss://your-url.com?type=camera&serial=SN-001
     const params = new URLSearchParams(req.url.split('?')[1]);
     const type = params.get('type');
     const serial = params.get('serial');
@@ -73,31 +84,99 @@ wss.on('connection', (ws, req) => {
     console.log(`[WS] New ${type} connected: ${serial}`);
 
     if (type === 'camera') {
-        // --- CAMERA LOGIC ---
-        ws.on('message', (message) => {
-            // 'message' is raw binary data (JPEG)
-            // Broadcast this frame to all viewers of THIS serial
-            if (streams.has(serial)) {
-                streams.get(serial).forEach(viewer => {
-                    if (viewer.readyState === 1) { // 1 = OPEN
-                        viewer.send(message);
-                    }
+        // 1. REGISTER CAMERA
+        cameraClients.set(serial, ws);
+
+        // 2. INITIAL CONFIG SYNC (The "Startup" Logic)
+        try {
+            let camera = await Camera.findOne({ serialNumber: serial });
+
+            if (!camera) {
+                // If new camera, create default entry
+                console.log(`[WS] Registering new camera: ${serial}`);
+                camera = await Camera.create({
+                    name: `Camera ${serial}`,
+                    serialNumber: serial,
+                    status: 'online',
+                    config: {} // Uses defaults from Schema
                 });
+            } else {
+                // Mark as Online
+                camera.status = 'online';
+                camera.lastSeen = new Date();
+                await camera.save();
             }
+
+            // Prepare Flat Payload for ESP32
+            const initialConfig = JSON.stringify({
+                streamEnabled: camera.config.streamEnabled,
+                streamResolution: camera.config.streamResolution,
+                apprehensionTimer: camera.config.apprehensionTimer,
+                zoneEnabled: camera.config.zoneEnabled,
+                polyX: camera.config.polyX,
+                polyY: camera.config.polyY,
+                servoPan: camera.config.servoPan,
+                servoTilt: camera.config.servoTilt
+            });
+
+            // Send immediately so ESP32 setup() catches it
+            ws.send(initialConfig);
+            console.log(`[WS] Sent startup config to ${serial}`);
+
+        } catch (err) {
+            console.error("Error fetching config:", err);
+        }
+
+        // 3. HANDLE MESSAGES
+        ws.on('message', async (message, isBinary) => {
+            // Logic: If Text -> Heartbeat. If Binary -> Video.
+            const isText = !isBinary && message.toString().trim().startsWith('{');
+
+            if (isText) {
+                // --- HEARTBEAT LOGIC ---
+                try {
+                    const msgData = JSON.parse(message.toString());
+                    if (msgData.type === 'heartbeat') {
+                        // Update DB without triggering a full re-render
+                        await Camera.updateOne(
+                            { serialNumber: serial },
+                            {
+                                lastSeen: new Date(),
+                                status: 'online'
+                            }
+                        );
+                    }
+                } catch (e) { /* Ignore bad JSON */ }
+            } else {
+                // --- VIDEO STREAMING LOGIC ---
+                // Forward binary to all frontend viewers watching this serial
+                if (streams.has(serial)) {
+                    streams.get(serial).forEach(viewer => {
+                        if (viewer.readyState === 1) viewer.send(message);
+                    });
+                }
+            }
+        });
+
+        // 4. CLEANUP ON DISCONNECT
+        ws.on('close', async () => {
+            console.log(`[WS] Camera disconnected: ${serial}`);
+            cameraClients.delete(serial);
+
+            // Mark as Offline
+            await Camera.updateOne(
+                { serialNumber: serial },
+                { status: 'offline' }
+            );
         });
 
     } else if (type === 'viewer') {
         // --- VIEWER LOGIC ---
-        if (!streams.has(serial)) {
-            streams.set(serial, new Set());
-        }
+        if (!streams.has(serial)) streams.set(serial, new Set());
         streams.get(serial).add(ws);
 
-        // Remove viewer on disconnect
         ws.on('close', () => {
-            if (streams.has(serial)) {
-                streams.get(serial).delete(ws);
-            }
+            if (streams.has(serial)) streams.get(serial).delete(ws);
         });
     }
 });
