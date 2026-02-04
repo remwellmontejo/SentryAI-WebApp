@@ -34,6 +34,7 @@ const updateCameraConfig = async (req, res) => {
 
     try {
         // 1. Update Database (Nested 'config' object)
+        // REMOVED 'upsert: true' so it won't create new docs
         const updatedCamera = await Camera.findOneAndUpdate(
             { serialNumber: serial },
             {
@@ -48,16 +49,22 @@ const updateCameraConfig = async (req, res) => {
                     "config.servoTilt": servoTilt
                 }
             },
-            { new: true, upsert: true } // Return the updated document
+            { new: true } // Return the updated document, but DO NOT create if missing
         );
 
+        // CHECK: If camera doesn't exist, return 404
+        if (!updatedCamera) {
+            return res.status(404).json({
+                success: false,
+                message: `Camera with serial ${serial} not found.`
+            });
+        }
+
         // 2. TRIGGER REAL-TIME UPDATE TO ESP32
-        // We access the global map 'cameraClients' attached to the request in server.js
         const client = req.cameraClients.get(serial);
 
         if (client && client.readyState === 1) { // 1 = WebSocket.OPEN
 
-            // Map Mongoose Model -> ESP32 Flat JSON
             const esp32Payload = JSON.stringify({
                 streamEnabled: updatedCamera.config.streamEnabled,
                 streamResolution: updatedCamera.config.streamResolution,

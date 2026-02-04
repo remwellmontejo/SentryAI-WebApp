@@ -4,6 +4,6 @@ const router = express.Router();
 
 router.get('/get', getCameras);
 router.get('/get/:serialNumber', getCameraDetails);
-router.put('/config/:serialNumber', updateCameraConfig);
+router.put('/config/:serial', updateCameraConfig);
 
 export default router;
