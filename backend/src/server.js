@@ -40,6 +40,14 @@ app.use(
     }),
 );
 
+app.use((req, res, next) => {
+    // This allows the Controller to find the socket and send data
+    req.cameraClients = cameraClients;
+    req.streams = streams;
+    next();
+});
+
+
 app.use("/api/apprehended-vehicle", apprehendedCarRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/cameras", cameraRoutes);
@@ -62,12 +70,6 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 
-app.use((req, res, next) => {
-    // This allows the Controller to find the socket and send data
-    req.cameraClients = cameraClients;
-    req.streams = streams;
-    next();
-});
 
 // --- WEBSOCKET LOGIC ---
 wss.on('connection', async (ws, req) => {
