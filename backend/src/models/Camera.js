@@ -11,7 +11,7 @@ const CameraSchema = new mongoose.Schema({
     // --- CONFIGURATION (Per Camera) ---
     config: {
         streamEnabled: { type: Boolean, default: false },
-        apprehensionTimer: { type: Number, default: 3000 },
+        apprehensionTimer: { type: Number, default: 30 },
         streamResolution: { type: Number, default: 1 },
         zoneEnabled: { type: Boolean, default: false },
         polyX: { type: [Number], default: [0, 100, 100, 0] },
