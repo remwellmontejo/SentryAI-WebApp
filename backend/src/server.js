@@ -162,14 +162,18 @@ wss.on('connection', async (ws, req) => {
 
         // 4. CLEANUP ON DISCONNECT
         ws.on('close', async () => {
-            console.log(`[WS] Camera disconnected: ${serial}`);
-            cameraClients.delete(serial);
+            // SECURITY CHECK: Only delete if THIS socket is the one currently in the map
+            if (cameraClients.get(serial) === ws) {
+                console.log(`[WS] Camera disconnected: ${serial}`);
+                cameraClients.delete(serial);
 
-            // Mark as Offline
-            await Camera.updateOne(
-                { serialNumber: serial },
-                { status: 'offline' }
-            );
+                await Camera.updateOne(
+                    { serialNumber: serial },
+                    { status: 'offline' }
+                );
+            } else {
+                console.log(`[WS] Old/Zombie socket for ${serial} closed. Ignoring.`);
+            }
         });
 
     } else if (type === 'viewer') {
