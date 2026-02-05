@@ -50,19 +50,41 @@ const formatDateAndTime = (isoString) => {
 const CameraDetailsPage = () => {
     const { serialNumber } = useParams();
     const navigate = useNavigate();
-    const [cameraData, setCameraData] = useState([]);
+    // FIX 1: Initialize as null so we know when data is missing
+    const [cameraData, setCameraData] = useState(null);
+
+    // FIX 2: Track local activity for status
+    const [lastActivity, setLastActivity] = useState(null);
+
     const [hasImage, setHasImage] = useState(false);
-    const [status, setStatus] = useState("Connecting");
     const [debugInfo, setDebugInfo] = useState("Waiting...");
 
-    // --- SERVO STATE ---
-    // We keep a local state for the sliders so they move instantly
-    const [servoState, setServoState] = useState({ pan: 90, tilt: 90 });
-    // This value updates only when you stop dragging for 300ms
+    // FIX 3: Initialize Servos as null until DB loads
+    const [servoState, setServoState] = useState(null);
     const debouncedServo = useDebounce(servoState, 300);
-
     const imgRef = useRef(null);
     const previousUrl = useRef(null);
+
+
+    const fetchDetails = async () => {
+        try {
+            const response = await api.get(`/api/cameras/get/${serialNumber}`);
+            setCameraData(response.data);
+            if (response.data?.config) {
+                setServoState({
+                    pan: response.data.config.servoPan,
+                    tilt: response.data.config.servoTilt
+                });
+            }
+        } catch (err) {
+            console.error("Error fetching details:", err);
+            setError("Failed to load camera details.");
+        }
+    };
+
+    // --- STATUS LOGIC ---
+    // We use lastActivity (updated by WebSocket) instead of just DB data
+    const isOnline = useCameraStatus(lastActivity);
 
     // Add this helper variable inside your component (before the return statement)
     const getCameraStatusLabel = () => {
@@ -81,22 +103,6 @@ const CameraDetailsPage = () => {
         return 'bg-yellow-100 text-yellow-800'; // For Disabled states
     };
 
-    const fetchDetails = async () => {
-        try {
-            const response = await api.get(`/api/cameras/get/${serialNumber}`);
-            setCameraData(response.data);
-            if (response.data?.config) {
-                setServoState({
-                    pan: response.data.config.servoPan,
-                    tilt: response.data.config.servoTilt
-                });
-            }
-        } catch (err) {
-            console.error("Error fetching details:", err);
-            setError("Failed to load camera details.");
-        }
-    };
-
     const handleServoChange = (e) => {
         const { name, value } = e.target;
         setServoState(prev => ({
@@ -105,11 +111,15 @@ const CameraDetailsPage = () => {
         }));
     };
 
-    const isOnline = useCameraStatus(cameraData?.lastSeen);
-
     useEffect(() => {
         // Skip the first run (when data is still loading)
-        if (!cameraData) return;
+        if (!cameraData || !debouncedServo) return;
+
+        // Don't run if values haven't changed from DB (prevents reset loop)
+        if (debouncedServo.pan === cameraData.config.servoPan &&
+            debouncedServo.tilt === cameraData.config.servoTilt) {
+            return;
+        }
 
         const updateServo = async () => {
             try {
@@ -136,9 +146,6 @@ const CameraDetailsPage = () => {
 
         fetchDetails();
 
-
-
-
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = "sentryai.onrender.com";
         const wsUrl = `${protocol}//${host}?type=viewer&serial=${serialNumber}`;
@@ -164,6 +171,8 @@ const CameraDetailsPage = () => {
         ws.onmessage = (event) => {
             // We expect a Blob (Binary Image)
             if (event.data instanceof Blob) {
+                // FIX 5: Update Activity Timestamp on every frame
+                setLastActivity(new Date().toISOString());
                 const blob = event.data;
                 setDebugInfo("Live");
 
@@ -177,9 +186,8 @@ const CameraDetailsPage = () => {
                 previousUrl.current = newUrl;
 
                 // 3. Update the image source
-                if (imgRef.current) {
-                    imgRef.current.src = newUrl;
-                }
+                if (imgRef.current) imgRef.current.src = newUrl;
+                setHasImage(true);
             }
             else {
                 console.warn("Received non-blob data:", event.data);
@@ -192,6 +200,8 @@ const CameraDetailsPage = () => {
             if (previousUrl.current) URL.revokeObjectURL(previousUrl.current);
         };
     }, [serialNumber]);
+
+    if (!cameraData || !servoState) return <div className="p-10 text-center">Loading Camera...</div>;
 
     return (
         <div className="min-h-screen bg-gray-50" data-theme="corporateBlue">
@@ -279,7 +289,7 @@ const CameraDetailsPage = () => {
                                         {/* 2. The Conditional Last Seen Text */}
                                         {!isOnline && (
                                             <span className="text-xs font-medium text-gray-500">
-                                                Last seen {formatDateAndTime(cameraData.lastSeen)}
+                                                Last seen {formatDateAndTime(lastActivity || cameraData.lastSeen)}
                                             </span>
                                         )}
                                     </div>
