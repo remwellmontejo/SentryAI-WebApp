@@ -7,6 +7,7 @@ import LandingPage from './pages/auth/LandingPage.jsx'
 import CamerasPage from './pages/app/cameras_page/CamerasPage.jsx'
 import CameraDetailsPage from './pages/app/cameras_page/CameraDetailsPage.jsx'
 import CarDetailsPage from './pages/app/details_page/CarDetailsPage.jsx'
+import CameraSettingsPage from './pages/app/cameras_page/CameraSettingsPage.jsx'
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
         <Route path="/cameras" element={<CamerasPage />} />
         <Route path="/cameras/:serialNumber" element={<CameraDetailsPage />} />
         <Route path="/apprehension/:id" element={<CarDetailsPage />} />
+        <Route path="/cameras/settings/:serialNumber" element={<CameraSettingsPage />} />
       </Routes>
     </div>
   )
