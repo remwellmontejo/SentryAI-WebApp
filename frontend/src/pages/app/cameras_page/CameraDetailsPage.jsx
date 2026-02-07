@@ -228,7 +228,7 @@ const CameraDetailsPage = () => {
 
                             {/* Stream Section */}
                             {/* 3. Added 'mx-auto' to center ONLY this element */}
-                            <div className="mx-auto relative w-full aspect-square bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-lg">
+                            <div className="mx-auto relative w-[480px] h-[480px] bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-lg">
                                 <img
                                     ref={imgRef}
                                     alt="Stream"
