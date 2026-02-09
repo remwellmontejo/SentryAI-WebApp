@@ -228,11 +228,11 @@ const CameraDetailsPage = () => {
 
                             {/* Stream Section */}
                             {/* 3. Added 'mx-auto' to center ONLY this element */}
-                            <div className="mx-auto relative w-full aspect-square bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-lg">
+                            <div className="mx-auto relative w-full h-auto bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-lg">
                                 <img
                                     ref={imgRef}
                                     alt="Stream"
-                                    className={`w-full aspect-square object-cover object-center ${hasImage ? 'block' : 'hidden'}`} // Toggle hidden/block
+                                    className={`w-full h-auto ${hasImage ? 'block' : 'hidden'}`} // Toggle hidden/block
                                     onLoad={() => setHasImage(true)}   // Show when image loads successfully
                                     onError={() => setHasImage(false)} // Hide if image breaks/is empty
                                 />
