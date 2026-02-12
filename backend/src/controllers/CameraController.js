@@ -89,4 +89,13 @@ const updateCameraConfig = async (req, res) => {
     }
 };
 
-export { getCameras, getCameraDetails, updateCameraConfig };
+const getCameraConfig = async (req, res) => {
+    const { serial } = req.params;
+    try {
+        const camera = await Camera.findOne({ serialNumber: serial });
+        if (!camera) return res.status(404).send("Camera not found");
+        res.json(camera.config);
+    } catch (e) { res.status(500).send(e.message); }
+};
+
+export { getCameras, getCameraDetails, updateCameraConfig, getCameraConfig };

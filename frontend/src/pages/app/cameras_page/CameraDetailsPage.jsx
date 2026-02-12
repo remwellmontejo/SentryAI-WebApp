@@ -228,11 +228,11 @@ const CameraDetailsPage = () => {
 
                             {/* Stream Section */}
                             {/* 3. Added 'mx-auto' to center ONLY this element */}
-                            <div className="mx-auto relative w-auto h-auto inline-flex bg-black rounded-xl overflow-hidden items-center justify-center shadow-lg">
+                            <div className="mx-auto relative w-full aspect-square bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-lg">
                                 <img
                                     ref={imgRef}
                                     alt="Stream"
-                                    className={`w-auto h-auto object-none ${hasImage ? 'block' : 'hidden'}`}
+                                    className={`w-full aspect-square object-cover object-center ${hasImage ? 'block' : 'hidden'}`} // Toggle hidden/block
                                     onLoad={() => setHasImage(true)}   // Show when image loads successfully
                                     onError={() => setHasImage(false)} // Hide if image breaks/is empty
                                 />
@@ -254,11 +254,23 @@ const CameraDetailsPage = () => {
                                 )}
 
                                 {/* 4. Debug Info Badge */}
-                                <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900 bg-opacity-75 text-white text-xs rounded font-mono z-20">
-                                    {debugInfo}
+                                <div className="absolute top-2 right-2 px-2 py-1 bg-opacity-0 text-white text-xs rounded font-mono z-20">
+                                    <button
+                                        onClick={() => navigate(`/cameras/settings/${cameraData.serialNumber}`)}
+                                        // 1. Flex container to align Icon + Text
+                                        // 2. Added background (bg-black/50) for readability over video
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-black/50 hover:bg-primary text-white rounded-lg transition-all backdrop-blur-sm border border-white/10"
+                                    >
+                                        {/* Adjusted size to 18 for better proportion with text */}
+                                        <Settings size={18} />
+
+                                        {/* The Text */}
+                                        <span className="text-xs font-bold uppercase tracking-wider">
+                                            Settings
+                                        </span>
+                                    </button>
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
