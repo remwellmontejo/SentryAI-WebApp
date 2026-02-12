@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { ArrowLeft, Save, RefreshCw, Trash2, Power, Settings, CheckCircle, Video } from 'lucide-react'; // Added Video Icon
+import { ArrowLeft, Save, RefreshCw, Trash2, Power, Settings, CheckCircle, Video } from 'lucide-react';
 import api from "../../../lib/axios";
 import Navbar from "../../../components/Navbar";
 import toast from 'react-hot-toast';
@@ -15,6 +15,7 @@ const CameraSettingsPage = () => {
 
     // Connection State
     const [isOnline, setIsOnline] = useState(false);
+    const [lastActivity, setLastActivity] = useState(0); // Store timestamp of last frame
 
     // Stream State
     const [hasImage, setHasImage] = useState(false);
@@ -24,7 +25,7 @@ const CameraSettingsPage = () => {
     // Config State
     const [config, setConfig] = useState({
         streamEnabled: false,
-        streamResolution: 1, // Default Medium
+        streamResolution: 1,
         apprehensionTimer: 3000,
         zoneEnabled: false,
         polyX: [0, 100, 100, 0],
@@ -33,7 +34,6 @@ const CameraSettingsPage = () => {
         servoTilt: 90
     });
 
-    // Helper for Polygon Editor
     const [tempPoints, setTempPoints] = useState([]);
     const containerRef = useRef(null);
 
@@ -44,7 +44,6 @@ const CameraSettingsPage = () => {
                 const res = await api.get(`/api/cameras/get/${serialNumber}`);
                 if (res.data && res.data.config) {
                     setConfig(res.data.config);
-                    // Reconstruct points for editor visualization
                     const points = res.data.config.polyX.map((x, i) => ({
                         x: x,
                         y: res.data.config.polyY[i]
@@ -60,7 +59,7 @@ const CameraSettingsPage = () => {
         fetchData();
     }, [serialNumber]);
 
-    // --- WEBSOCKET STREAM ---
+    // --- WEBSOCKET STREAM & STATUS LOGIC ---
     useEffect(() => {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const host = "sentryai.onrender.com";
@@ -69,9 +68,8 @@ const CameraSettingsPage = () => {
         const ws = new WebSocket(wsUrl);
         ws.binaryType = "blob";
 
-        ws.onopen = () => {
-            setIsOnline(true);
-        };
+        // REMOVED: ws.onopen setting isOnline(true). 
+        // Just connecting to the server doesn't mean the camera is there.
 
         ws.onclose = () => {
             setIsOnline(false);
@@ -84,8 +82,9 @@ const CameraSettingsPage = () => {
 
         ws.onmessage = (event) => {
             if (event.data instanceof Blob) {
-                // If we are receiving data, we are definitely online
+                // 1. We got data, so Camera is definitely ONLINE
                 setIsOnline(true);
+                setLastActivity(Date.now()); // Update heartbeat
 
                 if (previousUrl.current) URL.revokeObjectURL(previousUrl.current);
                 const newUrl = URL.createObjectURL(event.data);
@@ -95,18 +94,27 @@ const CameraSettingsPage = () => {
             }
         };
 
+        // --- WATCHDOG TIMER ---
+        // Check every 2 seconds if the camera has gone silent
+        const intervalId = setInterval(() => {
+            const now = Date.now();
+            // If no data for > 5 seconds, consider it OFFLINE
+            if (now - lastActivity > 5000 && lastActivity !== 0) {
+                setIsOnline(false);
+            }
+        }, 2000);
+
         return () => {
+            clearInterval(intervalId);
             if (ws.readyState === 1) ws.close();
             if (previousUrl.current) URL.revokeObjectURL(previousUrl.current);
         };
-    }, [serialNumber]);
+    }, [serialNumber, lastActivity]); // Depend on lastActivity to keep interval fresh
 
 
     // --- HANDLERS ---
     const handleImageClick = (e) => {
-        // DISABLE LOGIC: Cannot edit points if offline
         if (!isOnline) return;
-
         if (!containerRef.current) return;
         if (tempPoints.length >= 4) return;
 
@@ -127,7 +135,6 @@ const CameraSettingsPage = () => {
     };
 
     const resetPolygon = () => {
-        // DISABLE LOGIC: Cannot reset if offline
         if (!isOnline) return;
         setTempPoints([]);
     };
@@ -136,7 +143,6 @@ const CameraSettingsPage = () => {
         const { name, value, type, checked } = e.target;
         setConfig(prev => ({
             ...prev,
-            // Ensure resolution is parsed as an integer, otherwise it sends "1" (string) to API
             [name]: type === 'checkbox' ? checked : (name === 'streamResolution' ? parseInt(value) : value)
         }));
     };
@@ -164,7 +170,7 @@ const CameraSettingsPage = () => {
 
     const pointsString = tempPoints.map(p => `${p.x},${p.y}`).join(' ');
 
-    // Logic for disabling the Servo Controls: Offline OR Stream Disabled
+    // Logic: Servo is disabled if Offline OR Stream is Disabled
     const isServoDisabled = !isOnline || !config.streamEnabled;
 
     return (
@@ -185,7 +191,6 @@ const CameraSettingsPage = () => {
                         <div className="w-full flex flex-col gap-4">
                             <div
                                 ref={containerRef}
-                                // Added cursor-not-allowed if offline
                                 className={`mx-auto relative w-full aspect-square bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-lg select-none group ${isOnline ? 'cursor-crosshair' : 'cursor-not-allowed opacity-80'}`}
                                 onClick={handleImageClick}
                             >
@@ -218,7 +223,6 @@ const CameraSettingsPage = () => {
                                 <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={(e) => { e.stopPropagation(); resetPolygon(); }}
-                                        // Added disabled logic
                                         disabled={!isOnline}
                                         className="bg-white/90 hover:bg-red-50 text-red-600 p-2 rounded-lg shadow-sm transition-all flex items-center gap-2 text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
@@ -286,15 +290,15 @@ const CameraSettingsPage = () => {
                                         </label>
                                     </div>
 
-                                    {/* Resolution Dropdown - Added Here */}
+                                    {/* Resolution Dropdown */}
                                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
                                                 <Video size={20} />
                                             </div>
                                             <div>
-                                                <p className="font-bold text-gray-700">Stream Resolution</p>
-                                                <p className="text-xs text-gray-500">Adjust resolution for stream quality.</p>
+                                                <p className="font-bold text-gray-700">Resolution</p>
+                                                <p className="text-xs text-gray-500">Quality vs Speed</p>
                                             </div>
                                         </div>
                                         <select
@@ -334,7 +338,7 @@ const CameraSettingsPage = () => {
                                     </div>
                                 </div>
 
-                                <hr className="border-gray-100" />
+                                <hr className="border-gray-200" />
 
                                 {/* 2. Timer Settings */}
                                 <div>
@@ -358,14 +362,12 @@ const CameraSettingsPage = () => {
                                     </div>
                                 </div>
 
-                                <hr className="border-gray-100" />
+                                <hr className="border-gray-200" />
 
                                 {/* 3. Servo Controls */}
-                                {/* DISABLED LOGIC: Class opacity-50 if disabled */}
                                 <div className={isServoDisabled ? 'opacity-50 pointer-events-none grayscale' : ''}>
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Camera Position</h3>
-                                        {/* Status badge logic */}
                                         {isServoDisabled && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold">
                                             {!isOnline ? "OFFLINE" : "REQ. STREAM"}
                                         </span>}
@@ -383,7 +385,6 @@ const CameraSettingsPage = () => {
                                                 min="0" max="180"
                                                 value={config.servoPan}
                                                 onChange={handleChange}
-                                                // Added disabled attribute
                                                 disabled={isServoDisabled}
                                                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
                                             />
@@ -400,7 +401,6 @@ const CameraSettingsPage = () => {
                                                 min="0" max="180"
                                                 value={config.servoTilt}
                                                 onChange={handleChange}
-                                                // Added disabled attribute
                                                 disabled={isServoDisabled}
                                                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
                                             />
