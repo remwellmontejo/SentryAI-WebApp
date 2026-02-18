@@ -323,12 +323,12 @@ const CameraDetailsPage = () => {
 
                                 {/* Metadata */}
                                 <div className="pt-4 border-t border-gray-200">
-                                    <p className="text-md font-bold text-gray-800 mb-2">Apprehension Timer</p>
+                                    <p className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Apprehension Timer</p>
                                     <span className="font-sm text-gray-700">{cameraData?.config?.apprehensionTimer} seconds</span>
                                 </div>
 
                                 <div className="flex justify-between items-center mb-4 pt-4 border-t border-gray-200">
-                                    <p className="text-md font-bold text-gray-800">Camera Position</p>
+                                    <p className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Camera Position</p>
                                     <span className={`text-xs font-bold px-2 py-1 rounded ${getStatusColor()}`}>
                                         {getCameraStatusLabel()}
                                     </span>
