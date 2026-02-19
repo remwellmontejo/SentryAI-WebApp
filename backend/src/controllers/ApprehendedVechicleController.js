@@ -66,12 +66,13 @@ export async function createApprehendedVehicle(req, res) {
             // Plate Recognizer typically accepts the raw base64 string or the data URI.
             body.append("upload", base64Image);
             body.append("regions", "ph");
+            //body.append("detection_rule", "strict");
 
             const apiResponse = await fetch("https://api.platerecognizer.com/v1/plate-reader/", {
                 method: "POST",
                 headers: {
                     "Authorization": `Token ${process.env.PLATERECOGNIZER_TOKEN}`
-                    // ...body.getHeaders()
+                    //...body.getHeaders()
                 },
                 body: body,
             });
