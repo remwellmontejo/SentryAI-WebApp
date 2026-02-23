@@ -1,4 +1,5 @@
 import ApprehendedVehicle from '../models/ApprehendedVehicle.js';
+import Camera from '../models/Camera.js';
 import fetch from "node-fetch";
 import FormData from "form-data";
 import sizeOf from "image-size"; // Import image-size
@@ -9,6 +10,66 @@ export async function getAllApprehendedVehicles(req, res) {
         res.status(200).json(vehicles);
     } catch (error) {
         console.error('Error fetching vehicles:', error);
+        res.status(500).json({ message: 'Server error fetching data' });
+    }
+}
+
+export const getDashboardStats = async (req, res) => {
+    try {
+        // Create a date object for Midnight today (Server Time)
+        // Note: If your server is hosted on Render (UTC), you may want to offset this to Asia/Manila (+8)
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        // Use Promise.all to run all database queries concurrently for maximum speed
+        const [
+            totalApprehended,
+            pendingReview,
+            apprehendedToday
+        ] = await Promise.all([
+            ApprehendedVehicle.countDocuments(),
+            ApprehendedVehicle.countDocuments({ status: 'Pending' }),
+            ApprehendedVehicle.countDocuments({ createdAt: { $gte: startOfToday } })
+        ]);
+
+        // For Active Cameras, if you have a Camera model, you would query it here.
+        const activeCameras = await Camera.countDocuments({ isOnline: true });
+
+        res.status(200).json({
+            totalApprehended,
+            pendingReview,
+            apprehendedToday,
+            activeCameras
+        });
+
+    } catch (error) {
+        console.error('[ERROR] Failed to fetch dashboard stats:', error);
+        res.status(500).json({ message: 'Server error fetching dashboard stats' });
+    }
+};
+
+export async function getApprehendedVehiclesByStatus(req, res) {
+    try {
+        // Extract status from the URL parameters
+        const { status } = req.params;
+
+        // Ensure the input matches the Enum casing required by your Mongoose schema
+        const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
+        // Validate that the requested status is one of the allowed types
+        const allowedStatuses = ['Pending', 'Approved', 'Rejected'];
+        if (!allowedStatuses.includes(formattedStatus)) {
+            return res.status(400).json({
+                message: "Invalid status. Must be 'Pending', 'Approved', or 'Rejected'."
+            });
+        }
+
+        // Find vehicles matching the status, sorted newest to oldest
+        const vehicles = await ApprehendedVehicle.find({ status: formattedStatus }).sort({ createdAt: -1 });
+
+        res.status(200).json(vehicles);
+    } catch (error) {
+        console.error(`Error fetching ${req.params.status} vehicles:`, error);
         res.status(500).json({ message: 'Server error fetching data' });
     }
 }

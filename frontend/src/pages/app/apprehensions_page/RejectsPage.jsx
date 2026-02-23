@@ -1,10 +1,10 @@
 import Navbar from '../../../components/Navbar.jsx'
 import { useState, useEffect, useRef } from "react";
-import { Search, Filter, ChevronLeft, ChevronRight, View, ArchiveX } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, View, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
 import api from "../../../lib/axios.js";
 
-const ApprehensionPage = () => {
+const RejectsPage = () => {
     const navigate = useNavigate();
 
     // --- STATE ---
@@ -25,8 +25,8 @@ const ApprehensionPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get('/api/apprehended-vehicle/status/Approved');
-                // Filter for Approved apprehensions only
+                // Fetch ONLY Rejected apprehensions
+                const response = await api.get('/api/apprehended-vehicle/status/Rejected');
                 setVehicles(response.data);
                 setLoading(false);
             } catch (error) {
@@ -136,19 +136,19 @@ const ApprehensionPage = () => {
                     {/* --- Top Header Section --- */}
                     <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
 
-                        {/* Title & Rejects Button Container */}
+                        {/* Title & Back Button Container */}
                         <div className="flex items-center gap-3">
-                            <h2 className="text-2xl font-bold text-base-content">Apprehensions</h2>
+                            <h2 className="text-2xl font-bold text-base-content text-red-700">Rejected Apprehensions</h2>
 
-                            {/* Expanding Rejects Button */}
+                            {/* Expanding Back Button to Approved Apprehensions */}
                             <button
-                                onClick={() => navigate('/apprehensions/rejects')}
-                                className="group flex items-center gap-0 hover:gap-2 p-2 border border-gray-400 rounded-md text-black hover:text-red-600 hover:bg-red-50 hover:border-red-300 transition-all duration-300 overflow-hidden"
-                                title="View Rejected Apprehensions"
+                                onClick={() => navigate('/apprehensions')} // Adjust route to your Approved page
+                                className="group flex items-center gap-0 hover:gap-2 p-2 border border-gray-400 rounded-md text-black hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300 overflow-hidden"
+                                title="Back to Approved Apprehensions"
                             >
-                                <ArchiveX size={20} className="min-w-[20px]" />
-                                <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap group-hover:max-w-[120px] group-hover:opacity-100 transition-all duration-300 ease-in-out font-semibold text-sm">
-                                    View Rejects
+                                <ArrowLeft size={20} className="min-w-[20px]" />
+                                <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap group-hover:max-w-[130px] group-hover:opacity-100 transition-all duration-300 ease-in-out font-semibold text-sm">
+                                    Back to Approved
                                 </span>
                             </button>
                         </div>
@@ -238,7 +238,7 @@ const ApprehensionPage = () => {
                                     <tr><td colSpan="5" className="text-center py-12 text-gray-500">No records found.</td></tr>
                                 ) : (
                                     currentItems.map((vehicle) => (
-                                        <tr key={vehicle._id} className="border-b border-gray-300 hover:bg-gray-50 transition-colors">
+                                        <tr key={vehicle._id} className="border-b border-gray-300 hover:bg-red-50 transition-colors">
                                             <td className="py-3 px-6 h-12 font-medium text-gray-900">{vehicle.vehicleType}</td>
                                             <td className="py-3 px-6 text-center h-12 font-mono uppercase">{vehicle.plateNumber || "N/A"}</td>
                                             <td className="py-3 px-6 text-center h-12">{formatDate(vehicle.createdAt)}</td>
@@ -246,7 +246,7 @@ const ApprehensionPage = () => {
                                             <td className="py-3 px-6 h-12 text-center">
                                                 <button
                                                     onClick={() => toDetailsPage(vehicle._id)}
-                                                    className="text-gray-500 hover:text-[#000060] transition-colors p-1 rounded-full hover:bg-blue-50"
+                                                    className="text-gray-500 hover:text-red-700 transition-colors p-1 rounded-full hover:bg-red-100"
                                                 >
                                                     <View size={24} className="mx-auto" />
                                                 </button>
@@ -306,4 +306,4 @@ const ApprehensionPage = () => {
     )
 }
 
-export default ApprehensionPage;    
+export default RejectsPage;

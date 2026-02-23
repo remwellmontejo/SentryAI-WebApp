@@ -11,6 +11,12 @@ const HomePage = () => {
   // --- STATE ---
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalApprehended: 0,
+    pendingReview: 0,
+    apprehendedToday: 0,
+    activeCameras: 0
+  });
 
   // Pagination & Search State
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,8 +32,12 @@ const HomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await api.get('/api/apprehended-vehicle/get');
-        setVehicles(response.data);
+        const [stats, vehicles] = await Promise.all([
+          api.get('/api/apprehended-vehicle/stats/dashboard'),
+          api.get('/api/apprehended-vehicle/status/Pending')
+        ]);
+        setStats(stats.data);
+        setVehicles(vehicles.data); // Assuming you still want all vehicles for the table
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -129,25 +139,25 @@ const HomePage = () => {
       <div className='mb-5'>
         <Navbar />
       </div>
-      <div className='mx-4 sm:mx-20'>
+      <div className='mt-6 sm:mx-20'>
 
         {/* Stats Cards */}
         <div className='grid grid-cols-1 gap-6 mb-4 sm:grid-cols-2 lg:grid-cols-4'>
-          <InfoCard title="Total Apprehended" content={vehicles.length.toString()} properties="bg-green-400 m-2" properties_for_value="text-base-content">
+          <InfoCard title="Total Apprehended" content={stats.totalApprehended.toString()} properties="bg-green-400 m-2" properties_for_value="text-base-content">
             <CarFront className='size-20 ' />
           </InfoCard>
-          <InfoCard title="Apprehended Today" content="0" properties="bg-red-400 m-2" properties_for_value="text-base-content">
+          <InfoCard title="Apprehended Today" content={stats.apprehendedToday.toString()} properties="bg-red-400 m-2" properties_for_value="text-base-content">
             <CalendarCheck2 className='size-20 ' />
           </InfoCard>
-          <InfoCard title="Pending Review" content={vehicles.filter(v => v.status === 'Pending').length.toString()} properties="bg-yellow-400 m-2" properties_for_value="text-base-content">
+          <InfoCard title="Pending Review" content={stats.pendingReview.toString()} properties="bg-yellow-400 m-2" properties_for_value="text-base-content">
             <ClipboardClock className='size-20 ' />
           </InfoCard>
-          <InfoCard title="Active Cameras" content="1" properties="bg-blue-400 m-2" properties_for_value="text-base-content">
+          <InfoCard title="Active Cameras" content={stats.activeCameras.toString()} properties="bg-blue-400 m-2" properties_for_value="text-base-content">
             <Video className='size-20 ' />
           </InfoCard>
         </div>
 
-        <div className="w-full bg-white p-4 rounded-lg mt-6 ">
+        <div className="w-full bg-white p-4 rounded-lg">
 
           {/* --- Top Header Section --- */}
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
@@ -219,7 +229,7 @@ const HomePage = () => {
           </div>
 
           {/* --- The Table --- */}
-          <div className="border border-gray-300 rounded-t-lg overflow-hidden overflow-x-auto min-h-[300px]">
+          <div className="border border-gray-300 rounded-t-lg overflow-hidden overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead className="bg-[#000060] text-white">
                 <tr>
@@ -235,7 +245,7 @@ const HomePage = () => {
                 {loading ? (
                   <tr><td colSpan="5" className="text-center py-12">Loading data...</td></tr>
                 ) : currentItems.length === 0 ? (
-                  <tr><td colSpan="5" className="text-center py-12 text-gray-500">No records found.</td></tr>
+                  <tr><td colSpan="5" className="text-center py-12 text-gray-500">No pending apprehensions.</td></tr>
                 ) : (
                   currentItems.map((vehicle) => (
                     <tr key={vehicle._id} className="border-b border-gray-300 hover:bg-gray-50 transition-colors">

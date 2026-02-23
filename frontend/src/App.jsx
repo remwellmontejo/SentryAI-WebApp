@@ -9,6 +9,8 @@ import CameraDetailsPage from './pages/app/cameras_page/CameraDetailsPage.jsx'
 import CarDetailsPage from './pages/app/details_page/CarDetailsPage.jsx'
 import CameraSettingsPage from './pages/app/cameras_page/CameraSettingsPage.jsx'
 import EditApprehensionPage from './pages/app/details_page/EditApprehensionPage.jsx'
+import ApprehensionsPage from './pages/app/apprehensions_page/ApprehensionsPage.jsx'
+import RejectsPage from './pages/app/apprehensions_page/RejectsPage.jsx'
 
 const App = () => {
   return (
@@ -17,8 +19,9 @@ const App = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<LandingPage />} />
-
+        <Route path="/apprehensions/rejects" element={<RejectsPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/apprehensions" element={<ApprehensionsPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/cameras" element={<CamerasPage />} />
         <Route path="/cameras/:serialNumber" element={<CameraDetailsPage />} />
