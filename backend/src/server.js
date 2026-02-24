@@ -89,27 +89,24 @@ wss.on('connection', async (ws, req) => {
         // 1. REGISTER CAMERA
         cameraClients.set(serial, ws);
 
-        // 2. INITIAL CONFIG SYNC (The "Startup" Logic)
+        // 2. INITIAL CONFIG SYNC
         try {
             let camera = await Camera.findOne({ serialNumber: serial });
 
             if (!camera) {
-                // If new camera, create default entry
                 console.log(`[WS] Registering new camera: ${serial}`);
                 camera = await Camera.create({
                     name: `Camera ${serial}`,
                     serialNumber: serial,
                     status: 'online',
-                    config: {} // Uses defaults from Schema
+                    config: {}
                 });
             } else {
-                // Mark as Online
                 camera.status = 'online';
                 camera.lastSeen = new Date();
                 await camera.save();
             }
 
-            // Prepare Flat Payload for ESP32
             const initialConfig = JSON.stringify({
                 streamEnabled: camera.config.streamEnabled,
                 streamResolution: camera.config.streamResolution,
@@ -121,7 +118,6 @@ wss.on('connection', async (ws, req) => {
                 servoTilt: camera.config.servoTilt
             });
 
-            // Send immediately so ESP32 setup() catches it
             ws.send(initialConfig);
             console.log(`[WS] Sent startup config to ${serial}`);
 
@@ -131,27 +127,32 @@ wss.on('connection', async (ws, req) => {
 
         // 3. HANDLE MESSAGES
         ws.on('message', async (message, isBinary) => {
-            // Logic: If Text -> Heartbeat. If Binary -> Video.
             const isText = !isBinary && message.toString().trim().startsWith('{');
 
             if (isText) {
-                // --- HEARTBEAT LOGIC ---
                 try {
-                    const msgData = JSON.parse(message.toString());
+                    const messageStr = message.toString();
+                    const msgData = JSON.parse(messageStr);
+
                     if (msgData.type === 'heartbeat') {
-                        // Update DB without triggering a full re-render
+                        // Handle Heartbeat internally
                         await Camera.updateOne(
                             { serialNumber: serial },
-                            {
-                                lastSeen: new Date(),
-                                status: 'online'
-                            }
+                            { lastSeen: new Date(), status: 'online' }
                         );
+                    }
+                    // ---> NEW LOGIC: FORWARD SERVO CONFIRMATION TO VIEWERS <---
+                    // Change this line in your websocket server:
+                    else if (msgData.type === 'servo_moving') {
+                        if (streams.has(serial)) {
+                            streams.get(serial).forEach(viewer => {
+                                if (viewer.readyState === 1) viewer.send(messageStr);
+                            });
+                        }
                     }
                 } catch (e) { /* Ignore bad JSON */ }
             } else {
                 // --- VIDEO STREAMING LOGIC ---
-                // Forward binary to all frontend viewers watching this serial
                 if (streams.has(serial)) {
                     streams.get(serial).forEach(viewer => {
                         if (viewer.readyState === 1) viewer.send(message);
@@ -162,7 +163,6 @@ wss.on('connection', async (ws, req) => {
 
         // 4. CLEANUP ON DISCONNECT
         ws.on('close', async () => {
-            // SECURITY CHECK: Only delete if THIS socket is the one currently in the map
             if (cameraClients.get(serial) === ws) {
                 console.log(`[WS] Camera disconnected: ${serial}`);
                 cameraClients.delete(serial);

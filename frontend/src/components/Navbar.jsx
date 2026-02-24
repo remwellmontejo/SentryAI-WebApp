@@ -13,7 +13,7 @@ const Navbar = () => {
                     </label>
                     <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
                         <li><Link to={"/home"} className='font-semibold'>Home</Link></li>
-                        <li><a className='font-semibold'>Apprehensions</a></li>
+                        <li><Link to={"/apprehensions"} className='font-semibold'>Apprehensions</Link></li>
                         <li><Link to={"/cameras"} className='font-semibold'>Cameras</Link></li>
                         <li><Link to={"/about"} className='font-semibold'>About</Link></li>
                     </ul>

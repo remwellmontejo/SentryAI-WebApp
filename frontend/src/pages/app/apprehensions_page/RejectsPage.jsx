@@ -238,7 +238,7 @@ const RejectsPage = () => {
                                     <tr><td colSpan="5" className="text-center py-12 text-gray-500">No records found.</td></tr>
                                 ) : (
                                     currentItems.map((vehicle) => (
-                                        <tr key={vehicle._id} className="border-b border-gray-300 hover:bg-red-50 transition-colors">
+                                        <tr key={vehicle._id} className="border-b border-gray-300 hover:bg-gray-50 transition-colors">
                                             <td className="py-3 px-6 h-12 font-medium text-gray-900">{vehicle.vehicleType}</td>
                                             <td className="py-3 px-6 text-center h-12 font-mono uppercase">{vehicle.plateNumber || "N/A"}</td>
                                             <td className="py-3 px-6 text-center h-12">{formatDate(vehicle.createdAt)}</td>

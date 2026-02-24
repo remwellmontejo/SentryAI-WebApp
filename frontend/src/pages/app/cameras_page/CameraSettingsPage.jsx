@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { ArrowLeft, Save, RefreshCw, Trash2, Power, Settings, CheckCircle, Video } from 'lucide-react';
+import {
+    ArrowLeft, Save, RefreshCw, Trash2, Power, CheckCircle, Video, XCircle
+} from 'lucide-react';
 import api from "../../../lib/axios";
 import Navbar from "../../../components/Navbar";
 import toast from 'react-hot-toast';
@@ -15,23 +17,21 @@ const CameraSettingsPage = () => {
 
     // Connection State
     const [isOnline, setIsOnline] = useState(false);
-    const [lastActivity, setLastActivity] = useState(0); // Store timestamp of last frame
+    const [lastActivity, setLastActivity] = useState(0);
 
     // Stream State
     const [hasImage, setHasImage] = useState(false);
     const imgRef = useRef(null);
     const previousUrl = useRef(null);
 
-    // Config State
+    // Config State (Servo removed)
     const [config, setConfig] = useState({
         streamEnabled: false,
         streamResolution: 1,
         apprehensionTimer: 3000,
         zoneEnabled: false,
         polyX: [0, 100, 100, 0],
-        polyY: [0, 0, 100, 100],
-        servoPan: 90,
-        servoTilt: 90
+        polyY: [0, 0, 100, 100]
     });
 
     const [tempPoints, setTempPoints] = useState([]);
@@ -68,12 +68,9 @@ const CameraSettingsPage = () => {
         const ws = new WebSocket(wsUrl);
         ws.binaryType = "blob";
 
-        // REMOVED: ws.onopen setting isOnline(true). 
-        // Just connecting to the server doesn't mean the camera is there.
-
         ws.onclose = () => {
             setIsOnline(false);
-            setHasImage(false);
+            // Retain the last frame
         };
 
         ws.onerror = () => {
@@ -82,23 +79,25 @@ const CameraSettingsPage = () => {
 
         ws.onmessage = (event) => {
             if (event.data instanceof Blob) {
-                // 1. We got data, so Camera is definitely ONLINE
                 setIsOnline(true);
-                setLastActivity(Date.now()); // Update heartbeat
+                setLastActivity(Date.now());
 
-                if (previousUrl.current) URL.revokeObjectURL(previousUrl.current);
+                const oldUrl = previousUrl.current;
                 const newUrl = URL.createObjectURL(event.data);
+
                 previousUrl.current = newUrl;
                 if (imgRef.current) imgRef.current.src = newUrl;
                 setHasImage(true);
+
+                // Delay revoking the old URL by 100ms so the browser has time to paint the new one.
+                if (oldUrl) {
+                    setTimeout(() => URL.revokeObjectURL(oldUrl), 100);
+                }
             }
         };
 
-        // --- WATCHDOG TIMER ---
-        // Check every 2 seconds if the camera has gone silent
         const intervalId = setInterval(() => {
             const now = Date.now();
-            // If no data for > 5 seconds, consider it OFFLINE
             if (now - lastActivity > 5000 && lastActivity !== 0) {
                 setIsOnline(false);
             }
@@ -109,7 +108,7 @@ const CameraSettingsPage = () => {
             if (ws.readyState === 1) ws.close();
             if (previousUrl.current) URL.revokeObjectURL(previousUrl.current);
         };
-    }, [serialNumber, lastActivity]); // Depend on lastActivity to keep interval fresh
+    }, [serialNumber, lastActivity]);
 
 
     // --- HANDLERS ---
@@ -170,9 +169,6 @@ const CameraSettingsPage = () => {
 
     const pointsString = tempPoints.map(p => `${p.x},${p.y}`).join(' ');
 
-    // Logic: Servo is disabled if Offline OR Stream is Disabled
-    const isServoDisabled = !isOnline || !config.streamEnabled;
-
     return (
         <div className="min-h-screen bg-gray-50" data-theme="corporateBlue">
             <Navbar />
@@ -200,9 +196,19 @@ const CameraSettingsPage = () => {
                                     className={`w-full h-full object-cover pointer-events-none ${hasImage ? 'block' : 'hidden'}`}
                                 />
 
+                                {/* Fallback if no image has EVER loaded */}
                                 {!hasImage && (
                                     <div className="absolute inset-0 flex items-center justify-center text-gray-500 pointer-events-none">
                                         <p>{isOnline ? "Waiting for Stream..." : "Camera Offline"}</p>
+                                    </div>
+                                )}
+
+                                {/* Overlay Badge if offline but showing last frame */}
+                                {!isOnline && hasImage && (
+                                    <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                                        <div className="bg-red-600/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded shadow-sm flex items-center gap-1">
+                                            <XCircle size={12} /> Offline (Last Frame)
+                                        </div>
                                     </div>
                                 )}
 
@@ -256,7 +262,7 @@ const CameraSettingsPage = () => {
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="btn btn-primary disabled:opacity-50 font-medium shadow-sm transition-all"
+                                    className="flex items-center gap-2 px-4 py-2 btn btn-primary text-white rounded-lg disabled:opacity-50 font-medium shadow-sm transition-all"
                                 >
                                     {saving ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
                                     Save Changes
@@ -306,7 +312,7 @@ const CameraSettingsPage = () => {
                                             value={config.streamResolution || 1}
                                             onChange={handleChange}
                                             disabled={!config.streamEnabled}
-                                            className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 disabled:bg-gray-100 disabled:text-gray-400"
+                                            className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 disabled:bg-gray-100 disabled:text-gray-400 outline-none"
                                         >
                                             <option value={0}>120x120 (Low)</option>
                                             <option value={1}>240x240 (Medium)</option>
@@ -362,51 +368,6 @@ const CameraSettingsPage = () => {
                                     </div>
                                 </div>
 
-                                <hr className="border-gray-200" />
-
-                                {/* 3. Servo Controls */}
-                                <div className={isServoDisabled ? 'opacity-50 pointer-events-none grayscale' : ''}>
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Camera Position</h3>
-                                        {isServoDisabled && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded font-bold">
-                                            {!isOnline ? "OFFLINE" : "REQ. STREAM"}
-                                        </span>}
-                                    </div>
-
-                                    <div className="space-y-6">
-                                        <div>
-                                            <div className="flex justify-between mb-1">
-                                                <label className="text-xs font-bold text-gray-500 uppercase">Pan</label>
-                                                <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">{config.servoPan}°</span>
-                                            </div>
-                                            <input
-                                                type="range"
-                                                name="servoPan"
-                                                min="0" max="180"
-                                                value={config.servoPan}
-                                                onChange={handleChange}
-                                                disabled={isServoDisabled}
-                                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <div className="flex justify-between mb-1">
-                                                <label className="text-xs font-bold text-gray-500 uppercase">Tilt</label>
-                                                <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">{config.servoTilt}°</span>
-                                            </div>
-                                            <input
-                                                type="range"
-                                                name="servoTilt"
-                                                min="0" max="180"
-                                                value={config.servoTilt}
-                                                onChange={handleChange}
-                                                disabled={isServoDisabled}
-                                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:cursor-not-allowed"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>

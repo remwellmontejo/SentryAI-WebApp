@@ -1,9 +1,12 @@
 import Navbar from "../../../components/Navbar";
 import { useNavigate, useParams } from "react-router";
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from "../../../lib/axios.js";
 import { useCameraStatus } from "../../../hooks/useCameraStatus";
-import { CheckCircle, XCircle, ArrowLeft, Settings } from "lucide-react";
+import {
+    CheckCircle, XCircle, ArrowLeft, Settings,
+    ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RefreshCw
+} from "lucide-react";
 import BoundingPolygonOverlay from "../../../components/BoundingPolygonOverlay";
 
 const useDebounce = (value, delay) => {
@@ -37,9 +40,9 @@ const formatDateAndTime = (isoString) => {
 
     return new Date(isoString).toLocaleString('en-US', {
         timeZone: 'Asia/Manila',
-        month: 'long',    // e.g., "December"
-        day: 'numeric',   // e.g., "16"
-        year: 'numeric',  // e.g., "2025"
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
@@ -50,16 +53,14 @@ const formatDateAndTime = (isoString) => {
 const CameraDetailsPage = () => {
     const { serialNumber } = useParams();
     const navigate = useNavigate();
-    // FIX 1: Initialize as null so we know when data is missing
+
     const [cameraData, setCameraData] = useState(null);
-
-    // FIX 2: Track local activity for status
     const [lastActivity, setLastActivity] = useState(null);
-
     const [hasImage, setHasImage] = useState(false);
-    const [debugInfo, setDebugInfo] = useState("Waiting...");
 
-    // FIX 3: Initialize Servos as null until DB loads
+    // Servo Movement State
+    const [isServoMoving, setIsServoMoving] = useState(false);
+
     const [servoState, setServoState] = useState(null);
     const debouncedServo = useDebounce(servoState, 300);
     const imgRef = useRef(null);
@@ -78,15 +79,11 @@ const CameraDetailsPage = () => {
             }
         } catch (err) {
             console.error("Error fetching details:", err);
-            setError("Failed to load camera details.");
         }
     };
 
-    // --- STATUS LOGIC ---
-    // We use lastActivity (updated by WebSocket) instead of just DB data
     const isOnline = useCameraStatus(lastActivity);
 
-    // Add this helper variable inside your component (before the return statement)
     const getCameraStatusLabel = () => {
         const streamEnabled = cameraData?.config?.streamEnabled;
 
@@ -100,22 +97,32 @@ const CameraDetailsPage = () => {
         const label = getCameraStatusLabel();
         if (label === 'READY') return 'bg-green-100 text-green-700';
         if (label === 'OFFLINE') return 'bg-red-100 text-red-700';
-        return 'bg-yellow-100 text-yellow-800'; // For Disabled states
+        return 'bg-yellow-100 text-yellow-800';
     };
 
-    const handleServoChange = (e) => {
-        const { name, value } = e.target;
-        setServoState(prev => ({
-            ...prev,
-            [name]: parseInt(value)
-        }));
+    // --- D-PAD HANDLER ---
+    const handleServoNudge = (axis, direction) => {
+        if (isServoMoving) return;
+
+        // Optimistically lock the UI to prevent double clicks before WS response
+        setIsServoMoving(true);
+
+        setServoState(prev => {
+            if (!prev) return prev;
+            const step = 5; // 5 degrees per click
+            let newVal = prev[axis] + (direction * step);
+
+            // Constrain between 0 and 180
+            if (newVal < 0) newVal = 0;
+            if (newVal > 180) newVal = 180;
+
+            return { ...prev, [axis]: newVal };
+        });
     };
 
     useEffect(() => {
-        // Skip the first run (when data is still loading)
         if (!cameraData || !debouncedServo) return;
 
-        // Don't run if values haven't changed from DB (prevents reset loop)
         if (debouncedServo.pan === cameraData.config.servoPan &&
             debouncedServo.tilt === cameraData.config.servoTilt) {
             return;
@@ -123,24 +130,23 @@ const CameraDetailsPage = () => {
 
         const updateServo = async () => {
             try {
-                // We send the ENTIRE config, but with updated servo positions
                 const payload = {
-                    ...cameraData.config, // Keep existing zone/timer settings
+                    ...cameraData.config,
                     servoPan: debouncedServo.pan,
                     servoTilt: debouncedServo.tilt
                 };
 
-                // Call the API (This pushes to ESP32 via WebSocket)
                 await api.put(`/api/cameras/config/${serialNumber}`, payload);
-                console.log("Positions synced:", debouncedServo);
+                console.log("Positions synced to backend:", debouncedServo);
             } catch (err) {
                 console.error("Failed to move servo", err);
+                setIsServoMoving(false);
             }
         };
 
         updateServo();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedServo]); // Only runs when debounced value changes
+    }, [debouncedServo]);
 
     useEffect(() => {
 
@@ -156,12 +162,10 @@ const CameraDetailsPage = () => {
 
         ws.onopen = () => {
             console.log("[DEBUG] WebSocket Connected");
-            setStatus("Live");
         };
 
         ws.onclose = (event) => {
             console.log("[DEBUG] WebSocket Closed:", event);
-            setStatus("Offline");
         };
 
         ws.onerror = (error) => {
@@ -169,45 +173,55 @@ const CameraDetailsPage = () => {
         };
 
         ws.onmessage = (event) => {
-            // We expect a Blob (Binary Image)
+            // 1. Handle Video Frames
             if (event.data instanceof Blob) {
-                // FIX 5: Update Activity Timestamp on every frame
                 setLastActivity(new Date().toISOString());
                 const blob = event.data;
-                setDebugInfo("Live");
 
-                // 1. Clean up the previous frame's memory
                 if (previousUrl.current) {
                     URL.revokeObjectURL(previousUrl.current);
                 }
 
-                // 2. Create a new URL for this frame
                 const newUrl = URL.createObjectURL(blob);
                 previousUrl.current = newUrl;
 
-                // 3. Update the image source
                 if (imgRef.current) imgRef.current.src = newUrl;
                 setHasImage(true);
             }
-            else {
-                console.warn("Received non-blob data:", event.data);
+            // 2. Handle Text Messages (Lock/Unlock)
+            else if (typeof event.data === "string") {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    // Explicitly lock/unlock based on hardware status
+                    if (data.type === "servo_moving") {
+                        setIsServoMoving(data.status); // true = loading/disabled, false = ready/enabled
+                        if (data.status === false) {
+                            console.log("Hardware confirmed servo movement complete.");
+                        }
+                    }
+                } catch (e) {
+                    // Ignore non-JSON text
+                }
             }
         };
 
         return () => {
             if (ws.readyState === 1) ws.close();
-            // Cleanup last frame on unmount
             if (previousUrl.current) URL.revokeObjectURL(previousUrl.current);
         };
     }, [serialNumber]);
 
     if (!cameraData || !servoState) return <div className="p-10 text-center">Loading Camera...</div>;
 
+    // Disabled logic
+    const isControlDisabled = !isOnline || isServoMoving;
+
     return (
         <div className="min-h-screen bg-gray-50" data-theme="corporateBlue">
             <Navbar />
             <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Back Button */}
+
                 <div className="flex items-center justify-between mb-6">
                     <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium">
                         <ArrowLeft size={20} /> Back
@@ -217,27 +231,16 @@ const CameraDetailsPage = () => {
 
                     {/* ================= LEFT COLUMN: LIVE STREAM ================= */}
                     <div className="flex items-center justify-center w-full">
-                        {/* 1. Added 'flex flex-col' to stack items vertically */}
-                        {/* 2. Removed 'items-center' so the Title stays Left */}
                         <div className="w-full flex flex-col gap-2">
-
-                            {/* Title Section (Naturally aligns left) */}
-                            {/* <div className="w-full text-left">
-                                <h1 className="text-3xl font-extrabold text-gray-900">Live Feed</h1>
-                            </div> */}
-
-                            {/* Stream Section */}
-                            {/* 3. Added 'mx-auto' to center ONLY this element */}
                             <div className="mx-auto relative w-full aspect-square bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-lg">
                                 <img
                                     ref={imgRef}
                                     alt="Stream"
-                                    className={`w-full aspect-square object-cover object-center ${hasImage ? 'block' : 'hidden'}`} // Toggle hidden/block
-                                    onLoad={() => setHasImage(true)}   // Show when image loads successfully
-                                    onError={() => setHasImage(false)} // Hide if image breaks/is empty
+                                    className={`w-full aspect-square object-cover object-center ${hasImage ? 'block' : 'hidden'}`}
+                                    onLoad={() => setHasImage(true)}
+                                    onError={() => setHasImage(false)}
                                 />
-                                {/* 2. The Overlay Component (Placed Immediately After Image) */}
-                                {/* Only render if cameraData is loaded */}
+
                                 {cameraData && (
                                     <BoundingPolygonOverlay
                                         polyX={cameraData.config?.polyX}
@@ -246,25 +249,18 @@ const CameraDetailsPage = () => {
                                     />
                                 )}
 
-                                {/* 3. Waiting Placeholder */}
                                 {!hasImage && (
                                     <div className="absolute inset-0 flex items-center justify-center text-gray-500">
                                         <p>Waiting for Stream...</p>
                                     </div>
                                 )}
 
-                                {/* 4. Debug Info Badge */}
                                 <div className="absolute top-2 right-2 px-2 py-1 bg-opacity-0 text-white text-xs rounded font-mono z-20">
                                     <button
                                         onClick={() => navigate(`/cameras/settings/${cameraData.serialNumber}`)}
-                                        // 1. Flex container to align Icon + Text
-                                        // 2. Added background (bg-black/50) for readability over video
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-black/50 hover:bg-primary text-white rounded-lg transition-all backdrop-blur-sm border border-white/10"
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-black/50 hover:bg-blue-600 text-white rounded-lg transition-all backdrop-blur-sm border border-white/10"
                                     >
-                                        {/* Adjusted size to 18 for better proportion with text */}
                                         <Settings size={18} />
-
-                                        {/* The Text */}
                                         <span className="text-xs font-bold uppercase tracking-wider">
                                             Settings
                                         </span>
@@ -276,21 +272,16 @@ const CameraDetailsPage = () => {
 
                     {/* ================= RIGHT COLUMN: CAMERA DETAILS ================= */}
                     <div className="flex flex-col h-min">
-
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden mb-10">
 
-                            {/* Card Header: Type & Status */}
                             <div className="p-6 border-b border-gray-200 bg-gray-50">
                                 <div className="flex justify-between items-start">
-                                    {/* Left Side: Title */}
                                     <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Camera</p>
                                         <h1 className="text-3xl font-extrabold text-gray-900">{cameraData.name}</h1>
                                     </div>
 
-                                    {/* Right Side: Status Badge + Conditional Last Seen */}
                                     <div className="flex flex-col items-end gap-1">
-                                        {/* 1. The Status Pill */}
                                         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${getStatusStyle(isOnline ? 'online' : 'offline')}`}>
                                             {getStatusIcon(isOnline ? 'online' : 'offline')}
                                             <span className="font-bold text-xs uppercase tracking-wide">
@@ -298,7 +289,6 @@ const CameraDetailsPage = () => {
                                             </span>
                                         </div>
 
-                                        {/* 2. The Conditional Last Seen Text */}
                                         {!isOnline && (
                                             <span className="text-xs font-medium text-gray-500">
                                                 Last seen {formatDateAndTime(lastActivity || cameraData.lastSeen)}
@@ -308,10 +298,8 @@ const CameraDetailsPage = () => {
                                 </div>
                             </div>
 
-                            {/* Card Body: Info Grid */}
                             <div className="p-6 space-y-6 flex-1">
 
-                                {/* Plate Number */}
                                 <div>
                                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Serial Number</p>
                                     <div className="inline-block bg-gray-100 border-2 border-gray-300 rounded px-4 py-2">
@@ -321,62 +309,84 @@ const CameraDetailsPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Metadata */}
                                 <div className="pt-4 border-t border-gray-200">
                                     <p className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Apprehension Timer</p>
                                     <span className="font-sm text-gray-700">{cameraData?.config?.apprehensionTimer} seconds</span>
                                 </div>
 
-                                <div className="flex justify-between items-center mb-4 pt-4 border-t border-gray-200">
-                                    <p className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Camera Position</p>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded ${getStatusColor()}`}>
-                                        {getCameraStatusLabel()}
-                                    </span>
-                                </div>
-
-                                <div className="space-y-6">
-                                    {/* Pan Slider */}
-                                    <div>
-                                        <div className="flex justify-between mb-1">
-                                            <label className="text-sm font-medium text-gray-700">Pan (Horizontal)</label>
-                                            <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">{servoState.pan}°</span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            name="pan"
-                                            min="0" max="180"
-                                            value={servoState.pan}
-                                            onChange={handleServoChange}
-                                            disabled={!isOnline}
-                                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        />
-                                        <div className="flex justify-between text-[10px] text-gray-400 mt-1 uppercase tracking-wider">
-                                            <span>Left</span>
-                                            <span>Right</span>
-                                        </div>
+                                {/* Servo Controls (D-PAD) */}
+                                <div className="pt-4 border-t border-gray-200">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <p className="text-sm font-bold text-gray-900 uppercase tracking-wider">Camera Position</p>
+                                        <span className={`text-xs font-bold px-2 py-1 rounded ${getStatusColor()}`}>
+                                            {getCameraStatusLabel()}
+                                        </span>
                                     </div>
 
-                                    {/* Tilt Slider */}
-                                    <div>
-                                        <div className="flex justify-between mb-1">
-                                            <label className="text-sm font-medium text-gray-700">Tilt (Vertical)</label>
-                                            <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">{servoState.tilt}°</span>
-                                        </div>
-                                        <input
-                                            type="range"
-                                            name="tilt"
-                                            min="0" max="180"
-                                            value={servoState.tilt}
-                                            onChange={handleServoChange}
-                                            disabled={!isOnline}
-                                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        />
-                                        <div className="flex justify-between text-[10px] text-gray-400 mt-1 uppercase tracking-wider">
-                                            <span>Down</span>
-                                            <span>Up</span>
+                                    <div className={`flex items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-100 shadow-inner ${!isOnline ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {/* Top Row */}
+                                            <div></div>
+                                            <button
+                                                onClick={() => handleServoNudge('tilt', -1)}
+                                                disabled={isControlDisabled}
+                                                className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
+                                                title="Tilt Up"
+                                            >
+                                                <ChevronUp size={24} className="text-gray-700" />
+                                            </button>
+                                            <div></div>
+
+                                            {/* Middle Row */}
+                                            <button
+                                                onClick={() => handleServoNudge('pan', 1)}
+                                                disabled={isControlDisabled}
+                                                className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
+                                                title="Pan Left"
+                                            >
+                                                <ChevronLeft size={24} className="text-gray-700" />
+                                            </button>
+
+                                            {/* Center Panel (Shows Spinner while moving) */}
+                                            <div className="flex flex-col items-center justify-center p-2 bg-white rounded-lg border border-gray-200/50 shadow-sm w-full min-w-[70px] min-h-[60px]">
+                                                {isServoMoving ? (
+                                                    <>
+                                                        <RefreshCw className="animate-spin text-blue-500 mb-1" size={16} />
+                                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Wait</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Angle</span>
+                                                        <span className="text-xs font-mono text-gray-700">P:{servoState.pan}°</span>
+                                                        <span className="text-xs font-mono text-gray-700">T:{servoState.tilt}°</span>
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            <button
+                                                onClick={() => handleServoNudge('pan', -1)}
+                                                disabled={isControlDisabled}
+                                                className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
+                                                title="Pan Right"
+                                            >
+                                                <ChevronRight size={24} className="text-gray-700" />
+                                            </button>
+
+                                            {/* Bottom Row */}
+                                            <div></div>
+                                            <button
+                                                onClick={() => handleServoNudge('tilt', 1)}
+                                                disabled={isControlDisabled}
+                                                className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
+                                                title="Tilt Down"
+                                            >
+                                                <ChevronDown size={24} className="text-gray-700" />
+                                            </button>
+                                            <div></div>
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
