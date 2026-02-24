@@ -25,6 +25,7 @@ const getStatusStyle = (status) => {
     switch (status?.toLowerCase()) {
         case 'online': return "bg-green-100 text-green-800 border-green-200";
         case 'offline': return "bg-red-100 text-red-800 border-red-200";
+        default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
 };
 
@@ -32,6 +33,7 @@ const getStatusIcon = (status) => {
     switch (status?.toLowerCase()) {
         case 'online': return <CheckCircle size={16} />;
         case 'offline': return <XCircle size={16} />;
+        default: return null;
     }
 };
 
@@ -106,6 +108,9 @@ const CameraDetailsPage = () => {
 
         // Optimistically lock the UI to prevent double clicks before WS response
         setIsServoMoving(true);
+
+        // Failsafe: Unlock after 10 seconds just in case the WS message is lost over the network
+        setTimeout(() => setIsServoMoving(false), 10000);
 
         setServoState(prev => {
             if (!prev) return prev;
@@ -214,8 +219,16 @@ const CameraDetailsPage = () => {
 
     if (!cameraData || !servoState) return <div className="p-10 text-center">Loading Camera...</div>;
 
-    // Disabled logic
+    // --- BUTTON DISABLE LOGIC ---
+    // Globally disabled if offline or currently moving
     const isControlDisabled = !isOnline || isServoMoving;
+
+    // Specifically disable arrows if pushing them would break the 0-180 limits
+    // Note: direction values match your `handleServoNudge` payload mapping (-1 or 1)
+    const isTiltUpDisabled = isControlDisabled || (servoState.tilt - 5 < 0);
+    const isTiltDownDisabled = isControlDisabled || (servoState.tilt + 5 > 180);
+    const isPanLeftDisabled = isControlDisabled || (servoState.pan + 5 > 180);
+    const isPanRightDisabled = isControlDisabled || (servoState.pan - 5 < 0);
 
     return (
         <div className="min-h-screen bg-gray-50" data-theme="corporateBlue">
@@ -329,7 +342,7 @@ const CameraDetailsPage = () => {
                                             <div></div>
                                             <button
                                                 onClick={() => handleServoNudge('tilt', -1)}
-                                                disabled={isControlDisabled}
+                                                disabled={isTiltUpDisabled}
                                                 className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
                                                 title="Tilt Up"
                                             >
@@ -340,7 +353,7 @@ const CameraDetailsPage = () => {
                                             {/* Middle Row */}
                                             <button
                                                 onClick={() => handleServoNudge('pan', 1)}
-                                                disabled={isControlDisabled}
+                                                disabled={isPanLeftDisabled}
                                                 className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
                                                 title="Pan Left"
                                             >
@@ -357,15 +370,15 @@ const CameraDetailsPage = () => {
                                                 ) : (
                                                     <>
                                                         <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Angle</span>
-                                                        <span className="text-xs font-mono text-gray-700">P:{servoState.pan}°</span>
-                                                        <span className="text-xs font-mono text-gray-700">T:{servoState.tilt}°</span>
+                                                        <span className="text-xs font-mono text-gray-700">P:{servoState?.pan ?? 0}°</span>
+                                                        <span className="text-xs font-mono text-gray-700">T:{servoState?.tilt ?? 0}°</span>
                                                     </>
                                                 )}
                                             </div>
 
                                             <button
                                                 onClick={() => handleServoNudge('pan', -1)}
-                                                disabled={isControlDisabled}
+                                                disabled={isPanRightDisabled}
                                                 className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
                                                 title="Pan Right"
                                             >
@@ -376,7 +389,7 @@ const CameraDetailsPage = () => {
                                             <div></div>
                                             <button
                                                 onClick={() => handleServoNudge('tilt', 1)}
-                                                disabled={isControlDisabled}
+                                                disabled={isTiltDownDisabled}
                                                 className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
                                                 title="Tilt Down"
                                             >
