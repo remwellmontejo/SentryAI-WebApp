@@ -331,10 +331,8 @@ const CameraSettingsPage = () => {
                                             disabled={!config.streamEnabled}
                                             className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 disabled:bg-gray-100 disabled:text-gray-400 outline-none"
                                         >
-                                            <option value={0}>120x120 (Low)</option>
-                                            <option value={1}>240x240 (Medium)</option>
-                                            <option value={2}>320x320 (High)</option>
-                                            <option value={3}>480x480 (Ultra)</option>
+                                            <option value={0}>240x240 (Medium)</option>
+                                            <option value={1}>480x480 (High)</option>
                                         </select>
                                     </div>
 
