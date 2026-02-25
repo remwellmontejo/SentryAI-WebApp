@@ -143,9 +143,19 @@ const CameraSettingsPage = () => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
+
+        let finalValue = value;
+
+        if (type === 'checkbox') {
+            finalValue = checked;
+        } else if (type === 'number' || name === 'streamResolution') {
+            // Force conversion to a clean integer, fallback to 0 if NaN
+            finalValue = parseInt(value, 10) || 0;
+        }
+
         setConfig(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : (name === 'streamResolution' ? parseInt(value) : value)
+            [name]: finalValue
         }));
     };
 
