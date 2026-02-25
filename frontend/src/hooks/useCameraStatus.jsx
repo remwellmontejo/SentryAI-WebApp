@@ -16,7 +16,7 @@ export const useCameraStatus = (lastSeenDate) => {
             const diffSeconds = (now - lastSeen) / 1000;
 
             // Threshold: 45 seconds (30s heartbeat + 15s buffer)
-            setIsOnline(diffSeconds < 45);
+            setIsOnline(diffSeconds < 15);
         };
 
         // Run immediately
