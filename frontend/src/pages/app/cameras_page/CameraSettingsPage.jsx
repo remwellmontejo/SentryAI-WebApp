@@ -87,7 +87,9 @@ const CameraSettingsPage = () => {
 
                 previousUrl.current = newUrl;
                 if (imgRef.current) imgRef.current.src = newUrl;
-                setHasImage(true);
+
+                // REMOVED: setHasImage(true);
+                // We let the <img onLoad> handle this now, just like in DetailsPage!
 
                 // Delay revoking the old URL by 100ms so the browser has time to paint the new one.
                 if (oldUrl) {
@@ -193,7 +195,11 @@ const CameraSettingsPage = () => {
                                 <img
                                     ref={imgRef}
                                     alt="Live Stream"
+                                    // ADDED: The same hidden/block toggle logic based on state
                                     className={`w-full h-full object-cover pointer-events-none ${hasImage ? 'block' : 'hidden'}`}
+                                    // ADDED: The onLoad and onError handlers from Details Page
+                                    onLoad={() => setHasImage(true)}
+                                    onError={() => setHasImage(false)}
                                 />
 
                                 {/* Fallback if no image has EVER loaded */}
