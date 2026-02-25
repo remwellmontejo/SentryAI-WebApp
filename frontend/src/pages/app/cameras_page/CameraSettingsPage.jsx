@@ -149,8 +149,10 @@ const CameraSettingsPage = () => {
         if (type === 'checkbox') {
             finalValue = checked;
         } else if (type === 'number' || name === 'streamResolution') {
-            // Force conversion to a clean integer, fallback to 0 if NaN
-            finalValue = parseInt(value, 10) || 0;
+            // Explicitly parse the integer
+            const parsedValue = parseInt(value, 10);
+            // If it's a valid number, use it. Otherwise, default to 0.
+            finalValue = isNaN(parsedValue) ? 0 : parsedValue;
         }
 
         setConfig(prev => ({
@@ -324,7 +326,7 @@ const CameraSettingsPage = () => {
                                         </div>
                                         <select
                                             name="streamResolution"
-                                            value={config.streamResolution || 1}
+                                            value={config.streamResolution ?? 1}
                                             onChange={handleChange}
                                             disabled={!config.streamEnabled}
                                             className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 disabled:bg-gray-100 disabled:text-gray-400 outline-none"
