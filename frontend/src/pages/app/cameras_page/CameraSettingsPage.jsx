@@ -69,12 +69,12 @@ const CameraSettingsPage = () => {
         ws.binaryType = "blob";
 
         ws.onclose = () => {
-            setIsOnline(false);
-            // Retain the last frame
+            // We don't instantly set online to false here to prevent flickering.
+            // Let the watchdog timer handle the actual "offline" state after a delay.
         };
 
         ws.onerror = () => {
-            setIsOnline(false);
+            // Same here, rely on the watchdog.
         };
 
         ws.onmessage = (event) => {
@@ -88,9 +88,6 @@ const CameraSettingsPage = () => {
                 previousUrl.current = newUrl;
                 if (imgRef.current) imgRef.current.src = newUrl;
 
-                // REMOVED: setHasImage(true);
-                // We let the <img onLoad> handle this now, just like in DetailsPage!
-
                 // Delay revoking the old URL by 100ms so the browser has time to paint the new one.
                 if (oldUrl) {
                     setTimeout(() => URL.revokeObjectURL(oldUrl), 100);
@@ -98,12 +95,15 @@ const CameraSettingsPage = () => {
             }
         };
 
+        // --- IMPROVED WATCHDOG TIMER ---
+        // Check every 500ms, but only declare offline if 2.5 seconds have passed without a frame.
+        // This easily bridges the gap between slow frames and prevents UI flashing.
         const intervalId = setInterval(() => {
             const now = Date.now();
-            if (now - lastActivity > 5000 && lastActivity !== 0) {
+            if (lastActivity !== 0 && (now - lastActivity > 15000)) {
                 setIsOnline(false);
             }
-        }, 2000);
+        }, 500);
 
         return () => {
             clearInterval(intervalId);
@@ -115,6 +115,7 @@ const CameraSettingsPage = () => {
 
     // --- HANDLERS ---
     const handleImageClick = (e) => {
+        // Use the smoothed 'isOnline' state
         if (!isOnline) return;
         if (!containerRef.current) return;
         if (tempPoints.length >= 4) return;
@@ -195,9 +196,7 @@ const CameraSettingsPage = () => {
                                 <img
                                     ref={imgRef}
                                     alt="Live Stream"
-                                    // ADDED: The same hidden/block toggle logic based on state
                                     className={`w-full h-full object-cover pointer-events-none ${hasImage ? 'block' : 'hidden'}`}
-                                    // ADDED: The onLoad and onError handlers from Details Page
                                     onLoad={() => setHasImage(true)}
                                     onError={() => setHasImage(false)}
                                 />
