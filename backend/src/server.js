@@ -187,6 +187,48 @@ wss.on('connection', async (ws, req) => {
     }
 });
 
+const HEARTBEAT_TIMEOUT_MS = 20 * 1000; // 20 Seconds
+const WATCHDOG_INTERVAL_MS = 10 * 1000;     // Check every 10 seconds
+
+setInterval(async () => {
+    try {
+        const thresholdTime = new Date(Date.now() - HEARTBEAT_TIMEOUT_MS);
+
+        // Find all cameras currently marked 'online' but haven't checked in recently
+        const expiredCameras = await Camera.find({
+            status: 'online',
+            lastSeen: { $lt: thresholdTime }
+        });
+
+        if (expiredCameras.length > 0) {
+            console.log(`[Watchdog] Found ${expiredCameras.length} stale cameras. Marking as offline.`);
+
+            // Extract the serial numbers of the disconnected cameras
+            const serials = expiredCameras.map(cam => cam.serialNumber);
+
+            // 1. Update Database
+            await Camera.updateMany(
+                { serialNumber: { $in: serials } },
+                { $set: { status: 'offline' } }
+            );
+
+            // 2. Clean up server memory (Remove dead sockets from the Map)
+            serials.forEach(serial => {
+                if (cameraClients.has(serial)) {
+                    const ws = cameraClients.get(serial);
+                    if (ws.readyState !== 3) { // If not already closed
+                        ws.terminate(); // Force close the zombie connection
+                    }
+                    cameraClients.delete(serial);
+                    console.log(`[Watchdog] Terminated zombie socket for: ${serial}`);
+                }
+            });
+        }
+    } catch (error) {
+        console.error("[Watchdog] Error sweeping offline cameras:", error);
+    }
+}, WATCHDOG_INTERVAL_MS);
+
 connectDB().then(() => {
     const PORT = process.env.PORT || 5001;
 
