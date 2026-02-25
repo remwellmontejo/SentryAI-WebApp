@@ -33,7 +33,7 @@ export const getDashboardStats = async (req, res) => {
         ]);
 
         // For Active Cameras, if you have a Camera model, you would query it here.
-        const activeCameras = await Camera.countDocuments({ isOnline: true });
+        const activeCameras = await Camera.countDocuments({ status: 'online' });
 
         res.status(200).json({
             totalApprehended,
