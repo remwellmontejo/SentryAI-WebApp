@@ -84,7 +84,7 @@ const CameraDetailsPage = () => {
         }
     };
 
-    const isOnline = useCameraStatus(lastActivity) || cameraData?.config?.streamEnabled;
+    const isOnline = useCameraStatus(lastActivity) || cameraData?.status === 'online';
 
     const getCameraStatusLabel = () => {
         const streamEnabled = cameraData?.config?.streamEnabled;
