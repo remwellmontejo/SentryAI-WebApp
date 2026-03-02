@@ -29,7 +29,7 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(cors({
     origin: '*', // Or your specific Render frontend URL
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'] // <-- CRITICAL
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Metadata'] // <-- CRITICAL
 }));
 app.use(express.raw({
     type: 'image/jpeg',
