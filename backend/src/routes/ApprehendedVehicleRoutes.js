@@ -4,7 +4,7 @@ import { verifyToken } from '../middlewares/EnsureAuth.js';
 
 const router = express.Router();
 router.get('/get', verifyToken, getAllApprehendedVehicles);
-router.post('/create', verifyToken, createApprehendedVehicle);
+router.post('/create', createApprehendedVehicle);
 router.get('/:id', verifyToken, getApprehendedVehicleById);
 router.patch('/:id/status', verifyToken, statusUpdateApprehendedVehicle);
 router.patch('/:id/update', verifyToken, updateApprehendedVehicle);
