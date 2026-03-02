@@ -114,7 +114,7 @@ const CameraDetailsPage = () => {
 
         setServoState(prev => {
             if (!prev) return prev;
-            const step = 5; // 5 degrees per click
+            const step = 10; // 10 degrees per click
             let newVal = prev[axis] + (direction * step);
 
             // Constrain between 0 and 180
@@ -225,10 +225,10 @@ const CameraDetailsPage = () => {
 
     // Specifically disable arrows if pushing them would break the 0-180 limits
     // Note: direction values match your `handleServoNudge` payload mapping (-1 or 1)
-    const isTiltUpDisabled = isControlDisabled || (servoState.tilt - 5 < 0);
-    const isTiltDownDisabled = isControlDisabled || (servoState.tilt + 5 > 180);
-    const isPanLeftDisabled = isControlDisabled || (servoState.pan + 5 > 180);
-    const isPanRightDisabled = isControlDisabled || (servoState.pan - 5 < 0);
+    const isTiltUpDisabled = isControlDisabled || (servoState.tilt - 10 < 0);
+    const isTiltDownDisabled = isControlDisabled || (servoState.tilt + 10 > 180);
+    const isPanLeftDisabled = isControlDisabled || (servoState.pan + 10 > 180);
+    const isPanRightDisabled = isControlDisabled || (servoState.pan - 10 < 0);
 
     return (
         <div className="min-h-screen bg-gray-50" data-theme="corporateBlue">

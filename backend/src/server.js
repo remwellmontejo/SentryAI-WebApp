@@ -25,7 +25,11 @@ if (process.env.NODE_ENV !== 'production') {
         origin: 'http://localhost:5173',
     }));
 }
-app.use(cors({ origin: '*' }));
+app.use(cors({
+    origin: '*', // Or your specific Render frontend URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'] // <-- CRITICAL
+}));
 app.use(express.raw({
     type: 'image/jpeg',
     limit: '50mb'

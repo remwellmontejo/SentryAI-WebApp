@@ -1,9 +1,19 @@
 import React from 'react'
 import SentryAILogo from '../assets/sentry-ai-logo.svg';
-import { Link } from 'react-router'
-import { List } from 'lucide-react'
+import { Link, useNavigate } from 'react-router'
+import { List, LogOut } from 'lucide-react'
+import toast from 'react-hot-toast';
 
 const Navbar = () => {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
+        navigate('/login');
+        toast.success('Log out successfully!')
+    };
+
     return (
         <header className="navbar bg-base-100 shadow-md" data-theme="corporateBlue">
             <div className="navbar-start">
@@ -34,7 +44,13 @@ const Navbar = () => {
             </div>
 
             <div className="navbar-end">
-                <a className="btn btn-primary ml-2"><Link to={"/"}>Log Out</Link></a>
+                <button
+                    onClick={handleLogout}
+                    className="btn btn-primary btn-outline flex items-center gap-2 px-4 py-2 text-sm font-bold"
+                >
+                    <LogOut size={16} />
+                    Log Out
+                </button>
             </div>
         </header>
     )
