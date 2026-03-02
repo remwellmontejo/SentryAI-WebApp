@@ -33,7 +33,7 @@ function LoginPage() {
             console.log("Login Response:", response.data);
             toast.success('Login successful!');
             localStorage.setItem('token', response.data.token);
-            localStorage.setItem('username', response.data.email);
+            localStorage.setItem('username', response.data.username);
         } catch (error) {
             let errorMessage = 'Login failed. Please try again.'; // Default message
             if (error.response && error.response.data) {
