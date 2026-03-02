@@ -11,6 +11,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/AuthRoutes.js';
 import cameraRoutes from './routes/CameraRoutes.js';
 import Camera from './models/Camera.js';
+import publicApprehensionsRoutes from './routes/PublicApprehensionsRoutes.js'
 
 const app = express();
 const __dirname = path.resolve();
@@ -55,6 +56,7 @@ app.use((req, res, next) => {
 app.use("/api/apprehended-vehicle", apprehendedCarRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/cameras", cameraRoutes);
+app.use("/public", publicApprehensionsRoutes);
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });

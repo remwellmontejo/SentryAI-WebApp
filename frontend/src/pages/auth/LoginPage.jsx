@@ -129,14 +129,24 @@ function LoginPage() {
                         <button type="submit" className="btn btn-primary mt-2 rounded-sm">Login</button>
                     </fieldset>
                 </form>
-                <p className="text-center text-sm mt-4 text-base-100">
-                    Don't have an account?
-                    <Link to="/register" className='link ml-1'>Sign Up</Link>
-                </p>
-                <div className='pt-4'>
-                    <p>
-                        <Link to="/" className='link mt-4 text-center text-sm text-base-100'>Back to Home Page</Link>
-                    </p>
+                <div className="mt-4 flex flex-col items-center gap-4">
+                    {/* Sign Up Prompt */}
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="text-base-100">Don't have an account?</span>
+                        <Link
+                            to="/register"
+                            className="text-white font-bold hover:text-blue-200 transition-colors underline underline-offset-4"
+                        >
+                            Sign Up
+                        </Link>
+                    </div>
+                    {/* Back to Home Link */}
+                    <Link
+                        to="/"
+                        className="text-sm font-medium text-white hover:text-blue-200 transition-colors underline underline-offset-4"
+                    >
+                        &larr; Back to Home Page
+                    </Link>
                 </div>
             </div>
         </div>
