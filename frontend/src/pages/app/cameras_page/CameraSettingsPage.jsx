@@ -148,11 +148,13 @@ const CameraSettingsPage = () => {
 
         if (type === 'checkbox') {
             finalValue = checked;
-        } else if (type === 'number' || name === 'streamResolution') {
-            // Explicitly parse the integer
+        } else if (name === 'streamResolution') {
+            // Strict parsing for the dropdown to prevent falsy bugs
             const parsedValue = parseInt(value, 10);
-            // If it's a valid number, use it. Otherwise, default to 0.
             finalValue = isNaN(parsedValue) ? 0 : parsedValue;
+        } else if (type === 'number') {
+            // Allow the field to be completely empty while the user is typing
+            finalValue = value === '' ? '' : parseInt(value, 10);
         }
 
         setConfig(prev => ({
