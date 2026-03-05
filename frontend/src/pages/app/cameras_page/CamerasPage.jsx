@@ -120,7 +120,7 @@ const CamerasPage = () => {
                                     <tr><td colSpan="4" className="text-center py-12 text-gray-500">No cameras found.</td></tr>
                                 ) : (
                                     currentItems.map((camera) => (
-                                        <tr key={camera._id} className="border-b border-gray-300 hover:bg-gray-50 transition-colors">
+                                        <tr key={camera._id} className="border-b border-gray-300 hover:bg-gray-100 transition-colors">
                                             <td className="py-3 px-6 h-12">
                                                 <div className="font-medium text-gray-900">{camera.name}</div>
                                             </td>
