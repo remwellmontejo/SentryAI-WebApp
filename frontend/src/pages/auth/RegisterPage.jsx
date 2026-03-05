@@ -168,7 +168,7 @@ function RegisterPage() {
                     {/* Back to Home Link */}
                     <Link
                         to="/"
-                        className="text-sm font-medium text-blue-200 hover:text-white transition-colors underline underline-offset-4"
+                        className="text-sm font-medium text-white hover:text-blue-200 transition-colors underline underline-offset-4"
                     >
                         &larr; Back to Home Page
                     </Link>

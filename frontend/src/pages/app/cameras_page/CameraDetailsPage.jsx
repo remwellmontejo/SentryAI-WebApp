@@ -5,7 +5,7 @@ import api from "../../../lib/axios.js";
 import { useCameraStatus } from "../../../hooks/useCameraStatus";
 import {
     CheckCircle, XCircle, ArrowLeft, Settings,
-    ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RefreshCw
+    ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RefreshCw, Loader
 } from "lucide-react";
 import BoundingPolygonOverlay from "../../../components/BoundingPolygonOverlay";
 
@@ -217,7 +217,7 @@ const CameraDetailsPage = () => {
         };
     }, [serialNumber]);
 
-    if (!cameraData || !servoState) return <div className="p-10 text-center">Loading Camera...</div>;
+    if (!cameraData || !servoState) return <div className="min-h-screen flex flex-col items-center justify-center"><Loader size={48} className="text-primary animate-spin mb-4" /><p className="text-gray-500 text-lg font-medium">Loading camera...</p></div>;
 
     // --- BUTTON DISABLE LOGIC ---
     // Globally disabled if offline or currently moving

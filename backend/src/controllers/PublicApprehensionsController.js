@@ -8,7 +8,7 @@ const searchPublicApprehensions = async (req, res) => {
 
         // 2. Search the database with the APPROVED status filter
         const records = await ApprehendedVehicle.find({
-            plateNumber: { $regex: new RegExp(searchPlate, 'i') },
+            plateNumber: searchPlate,
             status: 'Approved' // Make sure this matches your schema's exact string
         });
 
@@ -36,4 +36,34 @@ const searchPublicApprehensions = async (req, res) => {
     }
 };
 
-export { searchPublicApprehensions };
+const getPublicApprehensionById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const vehicle = await ApprehendedVehicle.findOne({
+            _id: id,
+            status: 'Approved'
+        }).select('+sceneImageBase64');
+
+        if (!vehicle) {
+            return res.status(404).json({
+                success: false,
+                message: "Record not found or not yet approved"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: vehicle
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Server Error",
+            error: error.message
+        });
+    }
+};
+
+export { searchPublicApprehensions, getPublicApprehensionById };

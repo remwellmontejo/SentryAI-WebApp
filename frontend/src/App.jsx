@@ -12,6 +12,8 @@ import EditApprehensionPage from './pages/app/details_page/EditApprehensionPage.
 import ApprehensionsPage from './pages/app/apprehensions_page/ApprehensionsPage.jsx'
 import RejectsPage from './pages/app/apprehensions_page/RejectsPage.jsx'
 import ProtectedRoute from './components/ProtectedComponent.jsx'
+import ApprehensionSearchPage from './pages/home/ApprehensionSearchPage.jsx'
+import PublicApprehensionDetailsPage from './pages/home/PublicApprehensionDetailsPage.jsx'
 
 const App = () => {
   return (
@@ -20,6 +22,8 @@ const App = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<LandingPage />} />
+        <Route path="/public-results/:plateNumber" element={<ApprehensionSearchPage />} />
+        <Route path="/public-details/:id" element={<PublicApprehensionDetailsPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/apprehensions/rejects" element={<RejectsPage />} />
           <Route path="/home" element={<HomePage />} />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import {
-    ArrowLeft, Save, RefreshCw, Trash2, Power, CheckCircle, Video, XCircle
+    ArrowLeft, Save, RefreshCw, Trash2, Power, CheckCircle, Video, XCircle, Loader
 } from 'lucide-react';
 import api from "../../../lib/axios";
 import Navbar from "../../../components/Navbar";
@@ -182,7 +182,7 @@ const CameraSettingsPage = () => {
         }
     };
 
-    if (loading) return <div className="p-10 text-center">Loading Configuration...</div>;
+    if (loading) return <div className="min-h-screen flex flex-col items-center justify-center"><Loader size={48} className="text-primary animate-spin mb-4" /><p className="text-gray-500 text-lg font-medium">Loading configuration...</p></div>;
 
     const pointsString = tempPoints.map(p => `${p.x},${p.y}`).join(' ');
 

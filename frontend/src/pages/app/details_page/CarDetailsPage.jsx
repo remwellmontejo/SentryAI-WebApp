@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
     ArrowLeft, Edit, Trash2, Calendar, Clock, MapPin,
-    AlertCircle, CheckCircle, XCircle, Check, X, RotateCcw, AlertTriangle
+    AlertCircle, CheckCircle, XCircle, Check, X, RotateCcw, AlertTriangle, Loader
 } from "lucide-react";
 import toast from 'react-hot-toast';
 import api from "../../../lib/axios.js";
@@ -103,7 +103,7 @@ const CarDetailsPage = () => {
         });
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    if (loading) return <div className="min-h-screen flex flex-col items-center justify-center"><Loader size={48} className="text-primary animate-spin mb-4" /><p className="text-gray-500 text-lg font-medium">Loading details...</p></div>;
     if (!vehicle) return <div className="min-h-screen flex items-center justify-center">No Data</div>;
 
     const locationString = vehicle.x_coordinate && vehicle.y_coordinate

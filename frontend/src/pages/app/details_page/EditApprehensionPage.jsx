@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { ArrowLeft, Save, RefreshCw, Car, Hash, Activity, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Car, Hash, Activity, AlertTriangle, Loader } from 'lucide-react';
 import api from "../../../lib/axios";
 import Navbar from "../../../components/Navbar";
 import toast from 'react-hot-toast';
@@ -103,7 +103,7 @@ const EditApprehensionPage = () => {
         }
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50">Loading Editor...</div>;
+    if (loading) return <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50"><Loader size={48} className="text-primary animate-spin mb-4" /><p className="text-gray-500 text-lg font-medium">Loading editor...</p></div>;
 
     // Calculate dot position
     const dotPos = getSquarePosition(imageData.x, imageData.y);

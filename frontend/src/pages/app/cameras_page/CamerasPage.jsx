@@ -1,6 +1,6 @@
 import Navbar from '../../../components/Navbar.jsx'
 import { useState, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, View, Plus } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, View, Plus, Loader } from "lucide-react";
 import { useNavigate } from "react-router";
 import api from "../../../lib/axios.js";
 
@@ -115,7 +115,7 @@ const CamerasPage = () => {
 
                             <tbody className="text-gray-700">
                                 {loading ? (
-                                    <tr><td colSpan="4" className="text-center py-12">Loading data...</td></tr>
+                                    <tr><td colSpan="4" className="text-center py-12"><Loader size={32} className="text-primary animate-spin mx-auto" /></td></tr>
                                 ) : currentItems.length === 0 ? (
                                     <tr><td colSpan="4" className="text-center py-12 text-gray-500">No cameras found.</td></tr>
                                 ) : (

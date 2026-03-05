@@ -1,6 +1,6 @@
 import Navbar from '../../../components/Navbar.jsx'
 import { useState, useEffect, useRef } from "react";
-import { Search, Filter, ChevronLeft, ChevronRight, View, ArrowLeft } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, View, ArrowLeft, Loader } from "lucide-react";
 import { useNavigate } from "react-router";
 import api from "../../../lib/axios.js";
 
@@ -233,7 +233,7 @@ const RejectsPage = () => {
 
                             <tbody className="text-gray-700">
                                 {loading ? (
-                                    <tr><td colSpan="5" className="text-center py-12">Loading data...</td></tr>
+                                    <tr><td colSpan="5" className="text-center py-12"><Loader size={32} className="text-primary animate-spin mx-auto" /></td></tr>
                                 ) : currentItems.length === 0 ? (
                                     <tr><td colSpan="5" className="text-center py-12 text-gray-500">No records found.</td></tr>
                                 ) : (
