@@ -15,6 +15,29 @@ const getCameraDetails = async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 };
 
+const registerCamera = async (req, res) => {
+    try {
+        const { serialNumber, name } = req.body;
+
+        // Ensure camera doesn't already exist
+        const existing = await Camera.findOne({ serialNumber });
+        if (existing) {
+            return res.status(400).json({ success: false, message: "Camera with this serial number is already registered." });
+        }
+
+        const newCamera = new Camera({
+            serialNumber,
+            name,
+            status: 'offline'
+        });
+
+        await newCamera.save();
+        res.status(201).json({ success: true, data: newCamera });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+};
+
 // @desc    Update Camera Configuration
 // @route   PUT /api/cameras/config/:serial
 const updateCameraConfig = async (req, res) => {
@@ -100,4 +123,4 @@ const getCameraConfig = async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 };
 
-export { getCameras, getCameraDetails, updateCameraConfig, getCameraConfig };
+export { getCameras, getCameraDetails, registerCamera, updateCameraConfig, getCameraConfig };

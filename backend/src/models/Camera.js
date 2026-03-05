@@ -4,7 +4,6 @@ const CameraSchema = new mongoose.Schema({
     // --- IDENTITY ---
     name: { type: String, required: true },
     serialNumber: { type: String, required: true, unique: true },
-    location: { type: String, default: "Unknown" },
     status: { type: String, default: 'offline' }, // 'online' or 'offline'
     lastSeen: { type: Date, default: Date.now },
 

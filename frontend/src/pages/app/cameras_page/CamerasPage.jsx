@@ -75,7 +75,7 @@ const CamerasPage = () => {
 
                             {/* Expanding Register Button */}
                             <button
-                                onClick={() => navigate('/app/cameras/register')} // Adjust route as needed
+                                onClick={() => navigate('/cameras/register')} // Route adjusted
                                 className="group flex items-center gap-0 hover:gap-2 p-2 border border-gray-400 rounded-md text-black hover:text-green-600 hover:bg-green-50 hover:border-green-300 transition-all duration-300 overflow-hidden"
                                 title="Register New Camera"
                             >

@@ -141,18 +141,17 @@ const HomePage = () => {
       </div>
       <div className='mt-6 sm:mx-20'>
 
-        {/* Stats Cards */}
         <div className='grid grid-cols-1 gap-6 mb-4 sm:grid-cols-2 lg:grid-cols-4'>
-          <InfoCard title="Total Apprehended" content={stats.totalApprehended.toString()} properties="bg-green-400 m-2" properties_for_value="text-base-content">
+          <InfoCard title="Total Apprehended" content={stats.totalApprehended.toString()} properties="bg-white text-green-800 m-2" properties_for_value="text-[#000060]">
             <CarFront className='size-20 ' />
           </InfoCard>
-          <InfoCard title="Apprehended Today" content={stats.apprehendedToday.toString()} properties="bg-red-400 m-2" properties_for_value="text-base-content">
+          <InfoCard title="Apprehended Today" content={stats.apprehendedToday.toString()} properties="bg-white text-red-800 m-2" properties_for_value="text-[#000060]">
             <CalendarCheck2 className='size-20 ' />
           </InfoCard>
-          <InfoCard title="Pending Review" content={stats.pendingReview.toString()} properties="bg-yellow-400 m-2" properties_for_value="text-base-content">
+          <InfoCard title="Pending Review" content={stats.pendingReview.toString()} properties="bg-white text-yellow-600 m-2" properties_for_value="text-[#000060]">
             <ClipboardClock className='size-20 ' />
           </InfoCard>
-          <InfoCard title="Active Cameras" content={stats.activeCameras.toString()} properties="bg-blue-400 m-2" properties_for_value="text-base-content">
+          <InfoCard title="Active Cameras" content={stats.activeCameras.toString()} properties="bg-white text-blue-800 m-2" properties_for_value="text-[#000060]">
             <Video className='size-20 ' />
           </InfoCard>
         </div>
