@@ -22,6 +22,7 @@ const updateCameraConfig = async (req, res) => {
 
     // Destructure config fields from request body
     const {
+        name,
         streamEnabled,
         streamResolution,
         apprehensionTimer,
@@ -39,6 +40,7 @@ const updateCameraConfig = async (req, res) => {
             { serialNumber: serial },
             {
                 $set: {
+                    ...(name !== undefined && { name }),
                     "config.streamEnabled": streamEnabled,
                     "config.streamResolution": streamResolution,
                     "config.apprehensionTimer": apprehensionTimer,

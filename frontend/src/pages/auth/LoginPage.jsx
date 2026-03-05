@@ -9,6 +9,7 @@ function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
@@ -24,6 +25,7 @@ function LoginPage() {
         }
 
 
+        setLoading(true);
         try {
             const response = await api.post('/auth/login', {
                 email: formData.email,
@@ -51,6 +53,8 @@ function LoginPage() {
                 errorMessage = 'Network error. Please check your connection.';
             }
             toast.error(errorMessage);
+        } finally {
+            setLoading(false);
         }
 
     };
@@ -95,8 +99,9 @@ function LoginPage() {
                             <input
                                 type="email"
                                 className="input input-bordered w-full rounded-md placeholder-gray-500"
-                                value={email} // Set value from state
-                                onChange={(e) => setEmail(e.target.value)} // Update state on change
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                disabled={loading}
                             />
                         </div>
 
@@ -111,6 +116,7 @@ function LoginPage() {
                                         className="input input-bordered w-full rounded-md placeholder-gray-500 pr-10" // Added pr-10 to prevent text overlap with icon
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
+                                        disabled={loading}
                                     />
                                     <button
                                         type="button"
@@ -126,7 +132,13 @@ function LoginPage() {
                                 </div>
                             </div>
                         </div>
-                        <button type="submit" className="btn btn-primary mt-2 rounded-sm">Login</button>
+                        <button type="submit" className="btn btn-primary mt-2 rounded-sm" disabled={loading}>
+                            {loading ? (
+                                <span className="loading loading-spinner loading-sm"></span>
+                            ) : (
+                                "Login"
+                            )}
+                        </button>
                     </fieldset>
                 </form>
                 <div className="mt-4 flex flex-col items-center gap-4">

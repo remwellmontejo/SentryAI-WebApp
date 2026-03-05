@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import {
-    ArrowLeft, Save, RefreshCw, Trash2, Power, CheckCircle, Video, XCircle, Loader
+    ArrowLeft, Save, RefreshCw, Trash2, Power, CheckCircle, Video, XCircle, Loader, Pencil
 } from 'lucide-react';
 import api from "../../../lib/axios";
 import Navbar from "../../../components/Navbar";
@@ -14,6 +14,7 @@ const CameraSettingsPage = () => {
     // --- STATE ---
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [cameraName, setCameraName] = useState('');
 
     // Connection State
     const [isOnline, setIsOnline] = useState(false);
@@ -43,6 +44,7 @@ const CameraSettingsPage = () => {
             try {
                 const res = await api.get(`/api/cameras/get/${serialNumber}`);
                 if (res.data && res.data.config) {
+                    setCameraName(res.data.name || '');
                     setConfig(res.data.config);
                     const points = res.data.config.polyX.map((x, i) => ({
                         x: x,
@@ -171,7 +173,7 @@ const CameraSettingsPage = () => {
                 finalConfig.polyX = tempPoints.map(p => p.x);
                 finalConfig.polyY = tempPoints.map(p => p.y);
             }
-            await api.put(`/api/cameras/config/${serialNumber}`, finalConfig);
+            await api.put(`/api/cameras/config/${serialNumber}`, { name: cameraName, ...finalConfig });
             navigate(-1);
             toast.success(`Settings saved and pushed to ${serialNumber}`);
         } catch (err) {
@@ -289,6 +291,34 @@ const CameraSettingsPage = () => {
                             </div>
 
                             <div className="p-6 space-y-6">
+
+                                {/* Camera Name */}
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Camera Identity</h3>
+                                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+                                                <Pencil size={20} />
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-gray-700">Camera Name</p>
+                                                <p className="text-xs text-gray-500">Display name</p>
+                                            </div>
+                                        </div>
+                                        <div className="w-1/2">
+                                            <input
+                                                type="text"
+                                                value={cameraName}
+                                                onChange={(e) => setCameraName(e.target.value)}
+                                                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white text-right"
+                                                placeholder="Camera Name"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr className="border-gray-200" />
+
                                 {/* 1. System Toggles */}
                                 <div className="space-y-4">
                                     <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">System Control</h3>
