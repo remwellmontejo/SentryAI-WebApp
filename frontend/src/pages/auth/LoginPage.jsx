@@ -82,8 +82,8 @@ function LoginPage() {
                 <h2 className="justify-center text-3xl font-bold text-base-100 mb-4">
                     Welcome
                 </h2>
-                <form onSubmit={handleSubmit}>
-                    <fieldset className="fieldset bg-white border-base-300 rounded-xl w-md border p-8 px-10 space-y-2">
+                <form onSubmit={handleSubmit} className="w-full flex justify-center">
+                    <fieldset className="fieldset bg-white border-base-300 rounded-xl w-full max-w-lg border p-6 sm:p-8 sm:px-10 space-y-2">
                         <div className='w-full lg:hidden xl:hidden 2xl:hidden mb-4'>
                             <h2 className="w-full text-center text-2xl font-bold text-black">
                                 SentryAI

@@ -139,20 +139,20 @@ const HomePage = () => {
       <div className='mb-5'>
         <Navbar />
       </div>
-      <div className='mt-6 sm:mx-20'>
+      <div className='mt-6 px-4 sm:mx-20'>
 
-        <div className='grid grid-cols-1 gap-6 mb-4 sm:grid-cols-2 lg:grid-cols-4'>
-          <InfoCard title="Total Apprehended" content={stats.totalApprehended.toString()} properties="bg-white text-green-800 m-2" properties_for_value="text-[#000060]">
-            <CarFront className='size-20 ' />
+        <div className='grid grid-cols-2 gap-3 sm:gap-6 mb-4 lg:grid-cols-4'>
+          <InfoCard title="Total Apprehended" content={stats.totalApprehended.toString()} properties="bg-white text-green-800" properties_for_value="text-[#000060]">
+            <CarFront className='size-10 sm:size-20' />
           </InfoCard>
-          <InfoCard title="Apprehended Today" content={stats.apprehendedToday.toString()} properties="bg-white text-red-800 m-2" properties_for_value="text-[#000060]">
-            <CalendarCheck2 className='size-20 ' />
+          <InfoCard title="Apprehended Today" content={stats.apprehendedToday.toString()} properties="bg-white text-red-800" properties_for_value="text-[#000060]">
+            <CalendarCheck2 className='size-10 sm:size-20' />
           </InfoCard>
-          <InfoCard title="Pending Review" content={stats.pendingReview.toString()} properties="bg-white text-yellow-600 m-2" properties_for_value="text-[#000060]">
-            <ClipboardClock className='size-20 ' />
+          <InfoCard title="Pending Review" content={stats.pendingReview.toString()} properties="bg-white text-yellow-600" properties_for_value="text-[#000060]">
+            <ClipboardClock className='size-10 sm:size-20' />
           </InfoCard>
-          <InfoCard title="Active Cameras" content={stats.activeCameras.toString()} properties="bg-white text-blue-800 m-2" properties_for_value="text-[#000060]">
-            <Video className='size-20 ' />
+          <InfoCard title="Active Cameras" content={stats.activeCameras.toString()} properties="bg-white text-blue-800" properties_for_value="text-[#000060]">
+            <Video className='size-10 sm:size-20' />
           </InfoCard>
         </div>
 
