@@ -4,12 +4,10 @@ import { ArrowLeft, Calendar, Clock, MapPin, AlertTriangle, Loader } from 'lucid
 import SentryAILogo from '../../assets/sentry-ai-logo.svg?react';
 import api from '../../lib/axios';
 
-const getSquarePosition = (x, y, modelSize) => {
-    const percentX = ((x) / modelSize) * 100;
-    const percentY = ((y) / modelSize) * 100;
+const getSquarePosition = (x, y) => {
     return {
-        x: Math.max(0, Math.min(100, percentX)) + '%',
-        y: Math.max(0, Math.min(100, percentY)) + '%'
+        x: Math.max(0, Math.min(100, x)) + '%',
+        y: Math.max(0, Math.min(100, y)) + '%'
     };
 };
 
@@ -124,7 +122,7 @@ const PublicApprehensionDetailsPage = () => {
                                         className="w-full h-full object-cover"
                                     />
                                     {vehicle.x_coordinate !== undefined && vehicle.y_coordinate !== undefined && (() => {
-                                        const pos = getSquarePosition(vehicle.x_coordinate, vehicle.y_coordinate, AI_INPUT_SIZE);
+                                        const pos = getSquarePosition(vehicle.x_coordinate, vehicle.y_coordinate);
                                         return (
                                             <div
                                                 className="absolute w-4 h-4 border-2 border-red-500 rounded-full bg-red-500/20 shadow-[0_0_10px_rgba(255,0,0,0.5)] z-10 pointer-events-none transition-all duration-500"
@@ -193,8 +191,8 @@ const PublicApprehensionDetailsPage = () => {
                                             <span className="block text-sm font-bold text-gray-900 uppercase tracking-wider mb-1">Centroid Location</span>
                                             <div className="flex items-center gap-1 text-gray-600 font-medium text-sm">
                                                 <MapPin size={12} />
-                                                {vehicle.x_coordinate && vehicle.y_coordinate
-                                                    ? `X: ${vehicle.x_coordinate}, Y: ${vehicle.y_coordinate}`
+                                                {vehicle.x_coordinate !== undefined && vehicle.y_coordinate !== undefined
+                                                    ? `X: ${vehicle.x_coordinate}%, Y: ${vehicle.y_coordinate}%`
                                                     : "Unknown"}
                                             </div>
                                         </div>

@@ -9,12 +9,10 @@ import api from "../../../lib/axios.js";
 import Navbar from "../../../components/Navbar.jsx";
 
 // --- HELPERS ---
-const getSquarePosition = (x, y, modelSize) => {
-    const percentX = ((x) / modelSize) * 100;
-    const percentY = ((y) / modelSize) * 100;
+const getSquarePosition = (x, y) => {
     return {
-        x: Math.max(0, Math.min(100, percentX)) + '%',
-        y: Math.max(0, Math.min(100, percentY)) + '%'
+        x: Math.max(0, Math.min(100, x)) + '%',
+        y: Math.max(0, Math.min(100, y)) + '%'
     };
 };
 
@@ -106,8 +104,8 @@ const CarDetailsPage = () => {
     if (loading) return <div className="min-h-screen flex flex-col items-center justify-center"><Loader size={48} className="text-primary animate-spin mb-4" /><p className="text-gray-500 text-lg font-medium">Loading details...</p></div>;
     if (!vehicle) return <div className="min-h-screen flex items-center justify-center">No Data</div>;
 
-    const locationString = vehicle.x_coordinate && vehicle.y_coordinate
-        ? `X: ${vehicle.x_coordinate}, Y: ${vehicle.y_coordinate}`
+    const locationString = vehicle.x_coordinate !== undefined && vehicle.y_coordinate !== undefined
+        ? `X: ${vehicle.x_coordinate}%, Y: ${vehicle.y_coordinate}%`
         : "Unknown";
 
     const currentStatus = vehicle.status?.toLowerCase() || 'pending';
@@ -135,7 +133,7 @@ const CarDetailsPage = () => {
                                     className="w-full h-full object-cover"
                                 />
                                 {vehicle.x_coordinate !== undefined && vehicle.y_coordinate !== undefined && (() => {
-                                    const pos = getSquarePosition(vehicle.x_coordinate, vehicle.y_coordinate, AI_INPUT_SIZE);
+                                    const pos = getSquarePosition(vehicle.x_coordinate, vehicle.y_coordinate);
                                     return (
                                         <div
                                             className="absolute w-4 h-4 border-2 border-red-500 rounded-full bg-red-500/20 shadow-[0_0_10px_rgba(255,0,0,0.5)] z-10 pointer-events-none transition-all duration-500"
