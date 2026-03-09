@@ -193,18 +193,35 @@ const CameraDetailsPage = () => {
                 if (imgRef.current) imgRef.current.src = newUrl;
                 setHasImage(true);
             }
-            // 2. Handle Text Messages (Lock/Unlock)
+            // 2. Handle Text Messages (Lock/Unlock & Upload Status)
             else if (typeof event.data === "string") {
                 try {
                     const data = JSON.parse(event.data);
 
-                    // Explicitly lock/unlock based on hardware status
+                    // --- Handle Servo Movement ---
                     if (data.type === "servo_moving") {
                         setIsServoMoving(data.status); // true = loading/disabled, false = ready/enabled
                         if (data.status === false) {
                             console.log("Hardware confirmed servo movement complete.");
                         }
                     }
+
+                    // --- NEW: Handle Upload Status ---
+                    if (data.type === "upload_status") {
+                        if (data.message === "capturing") {
+                            // Show a loading toast that stays on screen
+                            toast.loading("Camera is capturing an apprehension...", { id: 'capture_toast' });
+                        }
+                        else if (data.message === "complete") {
+                            // Replace the loading toast with a success message
+                            toast.success("Apprehension successfully uploaded!", { id: 'capture_toast' });
+                        }
+                        else if (data.message === "failed") {
+                            // Replace the loading toast with an error message
+                            toast.error("Capture or upload failed.", { id: 'capture_toast' });
+                        }
+                    }
+
                 } catch (e) {
                     // Ignore non-JSON text
                 }
