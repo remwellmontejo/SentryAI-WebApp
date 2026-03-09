@@ -141,15 +141,14 @@ wss.on('connection', async (ws, req) => {
                     const msgData = JSON.parse(messageStr);
 
                     if (msgData.type === 'heartbeat') {
-                        // Handle Heartbeat internally
+                        // 1. Handle Heartbeat internally (Do NOT forward to UI to save bandwidth)
                         await Camera.updateOne(
                             { serialNumber: serial },
                             { lastSeen: new Date(), status: 'online' }
                         );
-                    }
-                    // ---> NEW LOGIC: FORWARD SERVO CONFIRMATION TO VIEWERS <---
-                    // Change this line in your websocket server:
-                    else if (msgData.type === 'servo_moving') {
+                    } else {
+                        // 2. GENERIC FORWARDER: 
+                        // Automatically pass ALL other JSON messages (servo_moving, upload_status, ai_logs) to the Viewers
                         if (streams.has(serial)) {
                             streams.get(serial).forEach(viewer => {
                                 if (viewer.readyState === 1) viewer.send(messageStr);
