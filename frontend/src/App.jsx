@@ -1,4 +1,6 @@
 import { Routes, Route, Router } from 'react-router'
+import { Toaster } from 'react-hot-toast'; // <--- 1. ADD THIS IMPORT
+
 import HomePage from './pages/home/HomePage.jsx'
 import AboutPage from './pages/app/about_page/AboutPage.jsx'
 import RegisterPage from './pages/auth/RegisterPage.jsx'
@@ -19,12 +21,16 @@ import PublicApprehensionDetailsPage from './pages/auth/PublicApprehensionDetail
 const App = () => {
   return (
     <div>
+      {/* 2. ADD THE TOASTER HERE */}
+      <Toaster position="top-center" reverseOrder={false} />
+
       <Routes>
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="/public-results/:plateNumber" element={<ApprehensionSearchPage />} />
         <Route path="/public-details/:id" element={<PublicApprehensionDetailsPage />} />
+
         <Route element={<ProtectedRoute />}>
           <Route path="/apprehensions/rejects" element={<RejectsPage />} />
           <Route path="/home" element={<HomePage />} />
