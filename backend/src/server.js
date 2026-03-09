@@ -149,6 +149,7 @@ wss.on('connection', async (ws, req) => {
                     } else {
                         // 2. GENERIC FORWARDER: 
                         // Automatically pass ALL other JSON messages (servo_moving, upload_status, ai_logs) to the Viewers
+                        console.log(`[WS] Forwarding generic message from ${serial}:`, messageStr);
                         if (streams.has(serial)) {
                             streams.get(serial).forEach(viewer => {
                                 if (viewer.readyState === 1) viewer.send(messageStr);
