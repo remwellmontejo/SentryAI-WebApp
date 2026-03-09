@@ -68,6 +68,7 @@ const CameraDetailsPage = () => {
     const debouncedServo = useDebounce(servoState, 300);
     const imgRef = useRef(null);
     const previousUrl = useRef(null);
+    const [liveLogs, setLiveLogs] = useState([]);
 
 
     const fetchDetails = async () => {
@@ -223,6 +224,10 @@ const CameraDetailsPage = () => {
                         }
                     }
 
+                    if (data.type === "ai_logs") {
+                        setLiveLogs(data.objects);
+                    }
+
                 } catch (e) {
                     // Ignore non-JSON text
                 }
@@ -298,8 +303,43 @@ const CameraDetailsPage = () => {
                                     </button>
                                 </div>
                             </div>
+
+                            {/* --- LIVE AI LOGS TERMINAL --- */}
+                            <div className="mt-4 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden shadow-inner">
+                                <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 flex justify-between items-center">
+                                    <span className="text-xs font-bold text-gray-300 uppercase tracking-widest flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                        Live Tracking Data
+                                    </span>
+                                    <span className="text-xs font-mono text-gray-400">
+                                        {liveLogs.length} Object(s)
+                                    </span>
+                                </div>
+
+                                <div className="p-4 h-32 overflow-y-auto font-mono text-xs text-green-400">
+                                    {liveLogs.length === 0 ? (
+                                        <p className="text-gray-500 italic">No stable objects currently tracked...</p>
+                                    ) : (
+                                        <ul className="space-y-1">
+                                            {liveLogs.map((obj) => (
+                                                <li key={obj.id} className="flex justify-between border-b border-gray-800 pb-1">
+                                                    <span>
+                                                        <span className="text-blue-400 font-bold">[{obj.id}]</span> {obj.class}
+                                                    </span>
+                                                    <span className="text-gray-400">
+                                                        Score: <span className="text-white">{obj.score}%</span> |
+                                                        Timer: <span className="text-yellow-400 font-bold">{obj.timer}s</span>
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            </div>
                         </div>
+
                     </div>
+
 
                     {/* ================= RIGHT COLUMN: CAMERA DETAILS ================= */}
                     <div className="flex flex-col h-min">
