@@ -176,7 +176,7 @@ export async function createApprehendedVehicle(req, res) {
             plateNumber: detectedPlateNumber,
             confidenceScore,
             x_coordinate: x_coordinate + 7, // Store original percentage (0-100)
-            y_coordinate: y_coordinate + 7, // Store original percentage (0-100)
+            y_coordinate: y_coordinate, // Store original percentage (0-100)
             sceneImageBase64: base64Image,
             status: "Pending"
         });
