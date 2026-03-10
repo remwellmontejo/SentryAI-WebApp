@@ -398,8 +398,8 @@ const CameraDetailsPage = () => {
                                                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:accent-gray-400 disabled:cursor-not-allowed"
                                             />
                                             <div className="flex justify-between text-xs text-gray-400 mt-1 font-mono">
-                                                <span>30°</span>
-                                                <span>100°</span>
+                                                <span>90°</span>
+                                                <span>130°</span>
                                             </div>
                                         </div>
 
