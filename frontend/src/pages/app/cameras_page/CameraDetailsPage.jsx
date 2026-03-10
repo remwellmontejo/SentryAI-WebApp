@@ -367,16 +367,16 @@ const CameraDetailsPage = () => {
                                             </div>
                                             <input
                                                 type="range"
-                                                min="0"
-                                                max="180"
+                                                min="45"
+                                                max="135"
                                                 value={servoState?.pan ?? 90}
                                                 onChange={(e) => handleSliderChange('pan', e.target.value)}
                                                 disabled={isControlDisabled}
                                                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:accent-gray-400 disabled:cursor-not-allowed"
                                             />
                                             <div className="flex justify-between text-xs text-gray-400 mt-1 font-mono">
-                                                <span>0°</span>
-                                                <span>180°</span>
+                                                <span>45°</span>
+                                                <span>135°</span>
                                             </div>
                                         </div>
 
@@ -390,16 +390,16 @@ const CameraDetailsPage = () => {
                                             </div>
                                             <input
                                                 type="range"
-                                                min="0"
-                                                max="180"
+                                                min="30"
+                                                max="100"
                                                 value={servoState?.tilt ?? 90}
                                                 onChange={(e) => handleSliderChange('tilt', e.target.value)}
                                                 disabled={isControlDisabled}
                                                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:accent-gray-400 disabled:cursor-not-allowed"
                                             />
                                             <div className="flex justify-between text-xs text-gray-400 mt-1 font-mono">
-                                                <span>0°</span>
-                                                <span>180°</span>
+                                                <span>30°</span>
+                                                <span>100°</span>
                                             </div>
                                         </div>
 
