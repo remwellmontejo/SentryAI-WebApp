@@ -98,42 +98,33 @@ export async function createApprehendedVehicle(req, res) {
         const { vehicleType, confidenceScore, x_coordinate, y_coordinate } = metadata;
 
         // --- 2. CONVERT TO BASE64 & GET DIMENSIONS ---
-        // We convert once here to use for both the API call and the Database save
         const base64Image = imageBuffer.toString('base64');
 
-        // Use the buffer to get dimensions (image-size works best with buffers)
         const dimensions = sizeOf(imageBuffer);
         const imgWidth = dimensions.width;
         const imgHeight = dimensions.height;
 
-        // --- 3. COORDINATE SCALING (Model 480px -> Real Image Size) ---
-        const scaleX = imgWidth / 480;
-        const scaleY = imgHeight / 480;
+        // --- 3. COORDINATE SCALING (Percentage 0-100 -> Real Image Pixels) ---
+        // The hardware now sends centroid as a percentage (0-100) based on a 240x240 model.
+        // Convert to real pixel coordinates for ALPR distance comparison.
+        const realCentroidX = (x_coordinate / 100) * imgWidth;
+        const realCentroidY = (y_coordinate / 100) * imgHeight;
 
-        const realCentroidX = x_coordinate * scaleX;
-        const realCentroidY = y_coordinate * scaleY;
-
-        console.log(`[ALPR] Model Centroid: (${x_coordinate}, ${y_coordinate})`);
-        console.log(`[ALPR] Real Centroid:  (${realCentroidX.toFixed(0)}, ${realCentroidY.toFixed(0)})`);
+        console.log(`[ALPR] Centroid %%: (${x_coordinate}%, ${y_coordinate}%)`);
+        console.log(`[ALPR] Real Centroid: (${realCentroidX.toFixed(0)}, ${realCentroidY.toFixed(0)}) in ${imgWidth}x${imgHeight} image`);
 
         // --- 4. PLATE RECOGNIZER API (BASE64 MODE) ---
         let detectedPlateNumber = "NO PLATE NUMBER DETECTED";
 
         try {
             const body = new FormData();
-
-            // Send the Base64 string directly
-            // Note: Some APIs might require "data:image/jpeg;base64," prefix. 
-            // Plate Recognizer typically accepts the raw base64 string or the data URI.
             body.append("upload", base64Image);
             body.append("regions", "ph");
-            //body.append("detection_rule", "strict");
 
             const apiResponse = await fetch("https://api.platerecognizer.com/v1/plate-reader/", {
                 method: "POST",
                 headers: {
                     "Authorization": `Token ${process.env.PLATERECOGNIZER_TOKEN}`
-                    //...body.getHeaders()
                 },
                 body: body,
             });
@@ -156,7 +147,7 @@ export async function createApprehendedVehicle(req, res) {
                         const plateCenterX = (box.xmin + box.xmax) / 2;
                         const plateCenterY = (box.ymin + box.ymax) / 2;
 
-                        // Compare Real Plate Center vs Scaled Centroid
+                        // Compare Real Plate Center vs Real Centroid (both in pixels)
                         const distance = Math.sqrt(
                             Math.pow(plateCenterX - realCentroidX, 2) +
                             Math.pow(plateCenterY - realCentroidY, 2)
@@ -180,15 +171,14 @@ export async function createApprehendedVehicle(req, res) {
         }
 
         // --- 6. SAVE TO DB ---
-        // Use the same base64 string we created earlier
         const newApprehendedVehicle = new ApprehendedVehicle({
             vehicleType,
             plateNumber: detectedPlateNumber,
             confidenceScore,
-            x_coordinate, // Store original 480 coords
-            y_coordinate, // Store original 480 coords
+            x_coordinate, // Store original percentage (0-100)
+            y_coordinate, // Store original percentage (0-100)
             sceneImageBase64: base64Image,
-            status: detectedPlateNumber === "FAILED" ? "Pending" : "Pending"
+            status: "Pending"
         });
 
         await newApprehendedVehicle.save();

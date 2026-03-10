@@ -185,6 +185,14 @@ const CarDetailsPage = () => {
                                             {vehicle.plateNumber || "NO-PLATE"}
                                         </span>
                                     </div>
+                                    {currentStatus === 'pending' && (
+                                        <div className="flex items-start gap-2 mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                                            <AlertTriangle size={16} className="text-amber-500 mt-0.5 shrink-0" />
+                                            <p className="text-xs text-amber-700 font-medium leading-relaxed">
+                                                Please verify the plate number is correct before approving. AI-detected plates may contain errors.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
