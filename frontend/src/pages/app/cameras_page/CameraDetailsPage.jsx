@@ -65,7 +65,7 @@ const CameraDetailsPage = () => {
     const [isServoMoving, setIsServoMoving] = useState(false);
 
     const [servoState, setServoState] = useState(null);
-    const debouncedServo = useDebounce(servoState, 300);
+    const debouncedServo = useDebounce(servoState, 500);
     const imgRef = useRef(null);
     const previousUrl = useRef(null);
     const [liveLogs, setLiveLogs] = useState([]);
@@ -105,25 +105,10 @@ const CameraDetailsPage = () => {
     };
 
     // --- D-PAD HANDLER ---
-    const handleServoNudge = (axis, direction) => {
-        if (isServoMoving) return;
-
-        // Optimistically lock the UI to prevent double clicks before WS response
-        setIsServoMoving(true);
-
-        // Failsafe: Unlock after 10 seconds just in case the WS message is lost over the network
-        setTimeout(() => setIsServoMoving(false), 10000);
-
+    const handleSliderChange = (axis, value) => {
         setServoState(prev => {
             if (!prev) return prev;
-            const step = 10; // 10 degrees per click
-            let newVal = prev[axis] + (direction * step);
-
-            // Constrain between 0 and 180
-            if (newVal < 0) newVal = 0;
-            if (newVal > 180) newVal = 180;
-
-            return { ...prev, [axis]: newVal };
+            return { ...prev, [axis]: parseInt(value, 10) };
         });
     };
 
@@ -136,6 +121,12 @@ const CameraDetailsPage = () => {
         }
 
         const updateServo = async () => {
+            // 1. Lock UI the moment the delay finishes and we send the request
+            setIsServoMoving(true);
+
+            // 2. Failsafe: Unlock after 10s if WebSocket packet is lost
+            const failsafe = setTimeout(() => setIsServoMoving(false), 10000);
+
             try {
                 const payload = {
                     ...cameraData.config,
@@ -148,6 +139,7 @@ const CameraDetailsPage = () => {
             } catch (err) {
                 console.error("Failed to move servo", err);
                 setIsServoMoving(false);
+                clearTimeout(failsafe);
             }
         };
 
@@ -303,43 +295,8 @@ const CameraDetailsPage = () => {
                                     </button>
                                 </div>
                             </div>
-
-                            {/* --- LIVE AI LOGS TERMINAL --- */}
-                            <div className="mt-4 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden shadow-inner">
-                                <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 flex justify-between items-center">
-                                    <span className="text-xs font-bold text-gray-300 uppercase tracking-widest flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                        Live Tracking Data
-                                    </span>
-                                    <span className="text-xs font-mono text-gray-400">
-                                        {liveLogs.length} Object(s)
-                                    </span>
-                                </div>
-
-                                <div className="p-4 h-32 overflow-y-auto font-mono text-xs text-green-400">
-                                    {liveLogs.length === 0 ? (
-                                        <p className="text-gray-500 italic">No stable objects currently tracked...</p>
-                                    ) : (
-                                        <ul className="space-y-1">
-                                            {liveLogs.map((obj) => (
-                                                <li key={obj.id} className="flex justify-between border-b border-gray-800 pb-1">
-                                                    <span>
-                                                        <span className="text-blue-400 font-bold">[{obj.id}]</span> {obj.class}
-                                                    </span>
-                                                    <span className="text-gray-400">
-                                                        Score: <span className="text-white">{obj.score}%</span> |
-                                                        Timer: <span className="text-yellow-400 font-bold">{obj.timer}s</span>
-                                                    </span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            </div>
                         </div>
-
                     </div>
-
 
                     {/* ================= RIGHT COLUMN: CAMERA DETAILS ================= */}
                     <div className="flex flex-col h-min">
@@ -385,79 +342,69 @@ const CameraDetailsPage = () => {
                                     <span className="font-sm text-gray-700">{cameraData?.config?.apprehensionTimer} seconds</span>
                                 </div>
 
-                                {/* Servo Controls (D-PAD) */}
+                                {/* Servo Controls (Sliders) */}
                                 <div className="pt-4 border-t border-gray-200">
                                     <div className="flex justify-between items-center mb-4">
                                         <p className="text-sm font-bold text-gray-900 uppercase tracking-wider">Camera Position</p>
-                                        <span className={`text-xs font-bold px-2 py-1 rounded ${getStatusColor()}`}>
-                                            {getCameraStatusLabel()}
-                                        </span>
-                                    </div>
-
-                                    <div className={`flex items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-100 shadow-inner ${!isOnline ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {/* Top Row */}
-                                            <div></div>
-                                            <button
-                                                onClick={() => handleServoNudge('tilt', -1)}
-                                                disabled={isTiltUpDisabled}
-                                                className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
-                                                title="Tilt Up"
-                                            >
-                                                <ChevronUp size={24} className="text-gray-700" />
-                                            </button>
-                                            <div></div>
-
-                                            {/* Middle Row */}
-                                            <button
-                                                onClick={() => handleServoNudge('pan', 1)}
-                                                disabled={isPanLeftDisabled}
-                                                className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
-                                                title="Pan Left"
-                                            >
-                                                <ChevronLeft size={24} className="text-gray-700" />
-                                            </button>
-
-                                            {/* Center Panel (Shows Spinner while moving) */}
-                                            <div className="flex flex-col items-center justify-center p-2 bg-white rounded-lg border border-gray-200/50 shadow-sm w-full min-w-[70px] min-h-[60px]">
-                                                {isServoMoving ? (
-                                                    <>
-                                                        <RefreshCw className="animate-spin text-blue-500 mb-1" size={16} />
-                                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Wait</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Angle</span>
-                                                        <span className="text-xs font-mono text-gray-700">P:{servoState?.pan ?? 0}°</span>
-                                                        <span className="text-xs font-mono text-gray-700">T:{servoState?.tilt ?? 0}°</span>
-                                                    </>
-                                                )}
-                                            </div>
-
-                                            <button
-                                                onClick={() => handleServoNudge('pan', -1)}
-                                                disabled={isPanRightDisabled}
-                                                className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
-                                                title="Pan Right"
-                                            >
-                                                <ChevronRight size={24} className="text-gray-700" />
-                                            </button>
-
-                                            {/* Bottom Row */}
-                                            <div></div>
-                                            <button
-                                                onClick={() => handleServoNudge('tilt', 1)}
-                                                disabled={isTiltDownDisabled}
-                                                className="p-3 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
-                                                title="Tilt Down"
-                                            >
-                                                <ChevronDown size={24} className="text-gray-700" />
-                                            </button>
-                                            <div></div>
+                                        <div className="flex items-center gap-2">
+                                            {/* Show spinner when locked */}
+                                            {isServoMoving && <RefreshCw className="animate-spin text-blue-500" size={16} />}
+                                            <span className={`text-xs font-bold px-2 py-1 rounded ${getStatusColor()}`}>
+                                                {getCameraStatusLabel()}
+                                            </span>
                                         </div>
                                     </div>
-                                </div>
 
+                                    <div className={`p-4 bg-gray-50 rounded-xl border border-gray-100 shadow-inner ${isControlDisabled ? 'opacity-60 grayscale cursor-not-allowed' : ''}`}>
+
+                                        {/* PAN SLIDER */}
+                                        <div className="mb-6">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-sm font-bold text-gray-700">Pan (Left/Right)</span>
+                                                <span className={`text-sm font-mono ${isServoMoving ? 'text-blue-500 font-bold animate-pulse' : 'text-gray-500'}`}>
+                                                    {servoState?.pan ?? 90}°
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="180"
+                                                value={servoState?.pan ?? 90}
+                                                onChange={(e) => handleSliderChange('pan', e.target.value)}
+                                                disabled={isControlDisabled}
+                                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:accent-gray-400 disabled:cursor-not-allowed"
+                                            />
+                                            <div className="flex justify-between text-xs text-gray-400 mt-1 font-mono">
+                                                <span>0°</span>
+                                                <span>180°</span>
+                                            </div>
+                                        </div>
+
+                                        {/* TILT SLIDER */}
+                                        <div>
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-sm font-bold text-gray-700">Tilt (Up/Down)</span>
+                                                <span className={`text-sm font-mono ${isServoMoving ? 'text-blue-500 font-bold animate-pulse' : 'text-gray-500'}`}>
+                                                    {servoState?.tilt ?? 90}°
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="180"
+                                                value={servoState?.tilt ?? 90}
+                                                onChange={(e) => handleSliderChange('tilt', e.target.value)}
+                                                disabled={isControlDisabled}
+                                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:accent-gray-400 disabled:cursor-not-allowed"
+                                            />
+                                            <div className="flex justify-between text-xs text-gray-400 mt-1 font-mono">
+                                                <span>0°</span>
+                                                <span>180°</span>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
