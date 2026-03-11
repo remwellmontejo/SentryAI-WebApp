@@ -46,10 +46,10 @@ const Navbar = () => {
             <div className="navbar-end">
                 <button
                     onClick={handleLogout}
-                    className="btn btn-primary btn-outline flex items-center gap-2 px-4 py-2 text-sm font-bold"
+                    className="btn btn-primary btn-outline flex items-center gap-2 p-2 sm:px-4 sm:py-2 text-sm font-bold"
                 >
                     <LogOut size={16} />
-                    Log Out
+                    <span className="hidden sm:inline">Log Out</span>
                 </button>
             </div>
         </header>

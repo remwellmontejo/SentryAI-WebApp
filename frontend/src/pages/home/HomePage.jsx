@@ -168,48 +168,53 @@ const HomePage = () => {
               <div ref={filterRef} className="relative">
                 <button
                   onClick={() => setShowFilter(!showFilter)}
-                  className={`p-2 border rounded-md transition-colors flex items-center gap-2 ${(dateRange.start || dateRange.end)
+                  className={`p-2 border rounded-md transition-colors flex items-center gap-2 font-medium text-sm ${(dateRange.start || dateRange.end)
                     ? "bg-blue-50 border-blue-500 text-blue-600"
                     : "border-gray-400 hover:bg-gray-50 text-black"
                     }`}
                 >
-                  <Filter size={20} />
-                  {(dateRange.start || dateRange.end) && <span className="text-xs font-bold">Active</span>}
+                  <Filter size={18} />
+                  <span>Filter</span>
+                  {(dateRange.start || dateRange.end) && <span className="text-xs font-bold bg-blue-500 text-white rounded-full px-1.5 py-0.5 leading-none">✓</span>}
                 </button>
 
                 {/* Filter Dropdown */}
                 {showFilter && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="font-bold text-gray-700">Filter by Date</h3>
-                      {(dateRange.start || dateRange.end) && (
-                        <button onClick={clearDateFilter} className="text-xs text-red-500 hover:text-red-700 font-medium">Clear</button>
-                      )}
-                    </div>
+                  <>
+                    {/* Mobile backdrop */}
+                    <div className="fixed inset-0 bg-black/30 z-40 sm:hidden" onClick={() => setShowFilter(false)} />
+                    <div className="fixed left-4 right-4 top-1/3 z-50 sm:absolute sm:right-0 sm:left-auto sm:top-auto sm:mt-2 w-auto sm:w-72 bg-white border border-gray-200 rounded-lg shadow-xl p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="font-bold text-gray-700">Filter by Date</h3>
+                        {(dateRange.start || dateRange.end) && (
+                          <button onClick={clearDateFilter} className="text-xs text-red-500 hover:text-red-700 font-medium">Clear</button>
+                        )}
+                      </div>
 
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">Start Date</label>
-                        <input
-                          type="date"
-                          name="start"
-                          value={dateRange.start}
-                          onChange={handleDateChange}
-                          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">End Date</label>
-                        <input
-                          type="date"
-                          name="end"
-                          value={dateRange.end}
-                          onChange={handleDateChange}
-                          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"
-                        />
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">Start Date</label>
+                          <input
+                            type="date"
+                            name="start"
+                            value={dateRange.start}
+                            onChange={handleDateChange}
+                            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-500 mb-1">End Date</label>
+                          <input
+                            type="date"
+                            name="end"
+                            value={dateRange.end}
+                            onChange={handleDateChange}
+                            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
 

@@ -247,7 +247,7 @@ const CameraSettingsPage = () => {
                                     ))}
                                 </svg>
 
-                                <div className="absolute top-2 right-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="absolute top-2 right-2 pointer-events-auto sm:opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
                                         onClick={(e) => { e.stopPropagation(); resetPolygon(); }}
                                         disabled={!isOnline}

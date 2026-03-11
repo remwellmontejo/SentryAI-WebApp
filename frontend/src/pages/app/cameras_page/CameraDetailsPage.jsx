@@ -402,7 +402,6 @@ const CameraDetailsPage = () => {
                                                 <span>130°</span>
                                             </div>
                                         </div>
-
                                     </div>
                                 </div>
                             </div>

@@ -6,12 +6,10 @@ import Navbar from "../../../components/Navbar";
 import toast from 'react-hot-toast';
 
 // --- HELPER: Positioning for the visual box ---
-const getSquarePosition = (x, y, modelSize = 480) => {
-    const percentX = ((x) / modelSize) * 100;
-    const percentY = ((y) / modelSize) * 100;
+const getSquarePosition = (x, y) => {
     return {
-        left: Math.max(0, Math.min(100, percentX)) + '%',
-        top: Math.max(0, Math.min(100, percentY)) + '%'
+        x: Math.max(0, Math.min(100, x)) + '%',
+        y: Math.max(0, Math.min(100, y)) + '%'
     };
 };
 
@@ -106,7 +104,7 @@ const EditApprehensionPage = () => {
     if (loading) return <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50"><Loader size={48} className="text-primary animate-spin mb-4" /><p className="text-gray-500 text-lg font-medium">Loading editor...</p></div>;
 
     // Calculate dot position
-    const dotPos = getSquarePosition(imageData.x, imageData.y);
+    const pos = getSquarePosition(imageData.x, imageData.y);
 
     return (
         <div className="min-h-screen bg-gray-50" data-theme="corporateBlue">
@@ -125,35 +123,37 @@ const EditApprehensionPage = () => {
                     {/* ================= LEFT COLUMN: EVIDENCE IMAGE ================= */}
                     <div className="flex items-center justify-center h-min w-full">
                         <div className="w-full flex flex-col gap-4">
-                            <div className="mx-auto relative w-full aspect-square bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-lg group">
-                                {imageData.base64 ? (
-                                    <>
-                                        <img
-                                            src={`data:image/jpeg;base64,${imageData.base64}`}
-                                            alt="Evidence"
-                                            className="w-full h-full object-cover"
-                                        />
+                            <div className="bg-white">
+                                <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-100">
+                                    {imageData.base64 ? (
+                                        <>
+                                            <img
+                                                src={`data:image/jpeg;base64,${imageData.base64}`}
+                                                alt="Evidence"
+                                                className="w-full h-full object-cover"
+                                            />
 
-                                        {/* Visual Marker */}
-                                        <div
-                                            className="absolute w-6 h-6 border-2 border-red-500 rounded-full bg-red-500/20 shadow-[0_0_15px_rgba(255,0,0,0.6)] z-10"
-                                            style={{
-                                                left: dotPos.left,
-                                                top: dotPos.top,
-                                                transform: 'translate(-50%, -50%)'
-                                            }}
-                                        >
-                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap">
-                                                {imageData.confidence}%
-                                            </div>
+                                            {/* Visual Marker */}
+                                            {imageData.x !== undefined && imageData.y !== undefined && (
+                                                <div
+                                                    className="absolute w-4 h-4 border-2 border-red-500 rounded-full bg-red-500/20 shadow-[0_0_10px_rgba(255,0,0,0.5)] z-10 pointer-events-none transition-all duration-500"
+                                                    style={{
+                                                        left: pos.x, top: pos.y, transform: 'translate(-50%, -50%)'
+                                                    }}
+                                                >
+                                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap z-20">
+                                                        {imageData.confidence}%
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+                                            <AlertTriangle size={32} />
+                                            <p>No Image Available</p>
                                         </div>
-                                    </>
-                                ) : (
-                                    <div className="text-gray-500 flex flex-col items-center gap-2">
-                                        <AlertTriangle size={32} />
-                                        <p>No Image Available</p>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
 
                             <p className="text-center text-sm text-gray-500">

@@ -143,11 +143,11 @@ const ApprehensionPage = () => {
                             {/* Expanding Rejects Button */}
                             <button
                                 onClick={() => navigate('/apprehensions/rejects')}
-                                className="group flex items-center gap-0 hover:gap-2 p-2 border border-gray-400 rounded-md text-black hover:text-red-600 hover:bg-red-50 hover:border-red-300 transition-all duration-300 overflow-hidden"
+                                className="group flex items-center gap-2 p-2 sm:px-3 sm:py-2 border border-red-300 rounded-md text-red-600 bg-red-50 hover:bg-red-100 hover:border-red-400 transition-all duration-300 font-semibold text-sm"
                                 title="View Rejected Apprehensions"
                             >
-                                <ArchiveX size={20} className="min-w-[20px]" />
-                                <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap group-hover:max-w-[120px] group-hover:opacity-100 transition-all duration-300 ease-in-out font-semibold text-sm">
+                                <ArchiveX size={18} className="min-w-[18px]" />
+                                <span className="hidden sm:inline whitespace-nowrap">
                                     View Rejects
                                 </span>
                             </button>
@@ -159,48 +159,53 @@ const ApprehensionPage = () => {
                             <div ref={filterRef} className="relative">
                                 <button
                                     onClick={() => setShowFilter(!showFilter)}
-                                    className={`p-2 border rounded-md transition-colors flex items-center gap-2 ${(dateRange.start || dateRange.end)
+                                    className={`p-2 border rounded-md transition-colors flex items-center gap-2 font-medium text-sm ${(dateRange.start || dateRange.end)
                                         ? "bg-blue-50 border-blue-500 text-blue-600"
                                         : "border-gray-400 hover:bg-gray-50 text-black"
                                         }`}
                                 >
-                                    <Filter size={20} />
-                                    {(dateRange.start || dateRange.end) && <span className="text-xs font-bold">Active</span>}
+                                    <Filter size={18} />
+                                    <span>Filter</span>
+                                    {(dateRange.start || dateRange.end) && <span className="text-xs font-bold bg-blue-500 text-white rounded-full px-1.5 py-0.5 leading-none">✓</span>}
                                 </button>
 
                                 {/* Filter Dropdown */}
                                 {showFilter && (
-                                    <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4">
-                                        <div className="flex justify-between items-center mb-3">
-                                            <h3 className="font-bold text-gray-700">Filter by Date</h3>
-                                            {(dateRange.start || dateRange.end) && (
-                                                <button onClick={clearDateFilter} className="text-xs text-red-500 hover:text-red-700 font-medium">Clear</button>
-                                            )}
-                                        </div>
+                                    <>
+                                        {/* Mobile backdrop */}
+                                        <div className="fixed inset-0 bg-black/30 z-40 sm:hidden" onClick={() => setShowFilter(false)} />
+                                        <div className="fixed left-4 right-4 top-1/3 z-50 sm:absolute sm:right-0 sm:left-auto sm:top-auto sm:mt-2 w-auto sm:w-72 bg-white border border-gray-200 rounded-lg shadow-xl p-4">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <h3 className="font-bold text-gray-700">Filter by Date</h3>
+                                                {(dateRange.start || dateRange.end) && (
+                                                    <button onClick={clearDateFilter} className="text-xs text-red-500 hover:text-red-700 font-medium">Clear</button>
+                                                )}
+                                            </div>
 
-                                        <div className="space-y-3">
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">Start Date</label>
-                                                <input
-                                                    type="date"
-                                                    name="start"
-                                                    value={dateRange.start}
-                                                    onChange={handleDateChange}
-                                                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">End Date</label>
-                                                <input
-                                                    type="date"
-                                                    name="end"
-                                                    value={dateRange.end}
-                                                    onChange={handleDateChange}
-                                                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"
-                                                />
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">Start Date</label>
+                                                    <input
+                                                        type="date"
+                                                        name="start"
+                                                        value={dateRange.start}
+                                                        onChange={handleDateChange}
+                                                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">End Date</label>
+                                                    <input
+                                                        type="date"
+                                                        name="end"
+                                                        value={dateRange.end}
+                                                        onChange={handleDateChange}
+                                                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </>
                                 )}
                             </div>
 

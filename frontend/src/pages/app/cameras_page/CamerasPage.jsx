@@ -75,12 +75,12 @@ const CamerasPage = () => {
 
                             {/* Expanding Register Button */}
                             <button
-                                onClick={() => navigate('/cameras/register')} // Route adjusted
-                                className="group flex items-center gap-0 hover:gap-2 p-2 border border-gray-400 rounded-md text-black hover:text-green-600 hover:bg-green-50 hover:border-green-300 transition-all duration-300 overflow-hidden"
+                                onClick={() => navigate('/cameras/register')}
+                                className="group flex items-center gap-2 p-2 sm:px-3 sm:py-2 border border-green-300 rounded-md text-green-600 bg-green-50 hover:bg-green-100 hover:border-green-400 transition-all duration-300 font-semibold text-sm"
                                 title="Register New Camera"
                             >
-                                <Plus size={20} className="min-w-[20px]" />
-                                <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap group-hover:max-w-[130px] group-hover:opacity-100 transition-all duration-300 ease-in-out font-semibold text-sm">
+                                <Plus size={18} className="min-w-[18px]" />
+                                <span className="hidden sm:inline whitespace-nowrap">
                                     Register Camera
                                 </span>
                             </button>
