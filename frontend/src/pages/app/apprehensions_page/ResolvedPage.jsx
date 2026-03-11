@@ -1,10 +1,10 @@
 import Navbar from '../../../components/Navbar.jsx'
 import { useState, useEffect, useRef } from "react";
-import { Search, Filter, ChevronLeft, ChevronRight, View, ArchiveX, ShieldCheck, Loader } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, View, ArrowLeft, Loader } from "lucide-react";
 import { useNavigate } from "react-router";
 import api from "../../../lib/axios.js";
 
-const ApprehensionPage = () => {
+const ResolvedPage = () => {
     const navigate = useNavigate();
 
     // --- STATE ---
@@ -25,8 +25,8 @@ const ApprehensionPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get('/api/apprehended-vehicle/status/Approved');
-                // Filter for Approved apprehensions only
+                // Fetch ONLY Rejected apprehensions
+                const response = await api.get('/api/apprehended-vehicle/status/Resolved');
                 setVehicles(response.data);
                 setLoading(false);
             } catch (error) {
@@ -136,32 +136,17 @@ const ApprehensionPage = () => {
                     {/* --- Top Header Section --- */}
                     <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
 
-                        {/* Title & Rejects Button Container */}
+                        {/* Title & Back Button Container */}
                         <div className="flex items-center gap-3">
-                            <h2 className="text-2xl font-bold text-base-content">Apprehensions</h2>
+                            <h2 className="text-2xl font-bold text-base-content text-emerald-700">Resolved Apprehensions</h2>
 
-                            {/* Expanding Resolved Button */}
+                            {/* Expanding Back Button to Approved Apprehensions */}
                             <button
-                                onClick={() => navigate('/apprehensions/resolved')}
-                                className="group flex items-center gap-2 p-2 sm:px-3 sm:py-2 border border-emerald-300 rounded-md text-emerald-600 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-400 transition-all duration-300 font-semibold text-sm"
-                                title="View Resolved Apprehensions"
+                                onClick={() => navigate('/apprehensions')}
+                                className="flex items-center p-2 border border-blue-300 rounded-md text-blue-600 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 transition-all duration-300"
+                                title="Back to Approved Apprehensions"
                             >
-                                <ShieldCheck size={18} className="min-w-[18px]" />
-                                <span className="hidden sm:inline whitespace-nowrap">
-                                    View Resolved
-                                </span>
-                            </button>
-
-                            {/* Expanding Rejects Button */}
-                            <button
-                                onClick={() => navigate('/apprehensions/rejects')}
-                                className="group flex items-center gap-2 p-2 sm:px-3 sm:py-2 border border-red-300 rounded-md text-red-600 bg-red-50 hover:bg-red-100 hover:border-red-400 transition-all duration-300 font-semibold text-sm"
-                                title="View Rejected Apprehensions"
-                            >
-                                <ArchiveX size={18} className="min-w-[18px]" />
-                                <span className="hidden sm:inline whitespace-nowrap">
-                                    View Rejects
-                                </span>
+                                <ArrowLeft size={18} />
                             </button>
                         </div>
 
@@ -190,7 +175,7 @@ const ApprehensionPage = () => {
                                             <div className="flex justify-between items-center mb-3">
                                                 <h3 className="font-bold text-gray-700">Filter by Date</h3>
                                                 {(dateRange.start || dateRange.end) && (
-                                                    <button onClick={clearDateFilter} className="text-xs text-red-500 hover:text-red-700 font-medium">Clear</button>
+                                                    <button onClick={clearDateFilter} className="text-xs text-emerald-500 hover:text-emerald-700 font-medium">Clear</button>
                                                 )}
                                             </div>
 
@@ -265,7 +250,7 @@ const ApprehensionPage = () => {
                                             <td className="py-3 px-6 h-12 text-center">
                                                 <button
                                                     onClick={() => toDetailsPage(vehicle._id)}
-                                                    className="text-gray-500 hover:text-[#000060] transition-colors p-1 rounded-full hover:bg-blue-50"
+                                                    className="text-gray-500 hover:text-emerald-700 transition-colors p-1 rounded-full hover:bg-emerald-100"
                                                 >
                                                     <View size={24} className="mx-auto" />
                                                 </button>
@@ -325,4 +310,4 @@ const ApprehensionPage = () => {
     )
 }
 
-export default ApprehensionPage;    
+export default ResolvedPage;

@@ -9,7 +9,7 @@ const searchPublicApprehensions = async (req, res) => {
         // 2. Search the database with the APPROVED status filter
         const records = await ApprehendedVehicle.find({
             plateNumber: searchPlate,
-            status: 'Approved' // Make sure this matches your schema's exact string
+            status: { $in: ['Approved', 'Resolved'] }
         });
 
         // 3. Return results
@@ -42,7 +42,7 @@ const getPublicApprehensionById = async (req, res) => {
 
         const vehicle = await ApprehendedVehicle.findOne({
             _id: id,
-            status: 'Approved'
+            status: { $in: ['Approved', 'Resolved'] }
         }).select('+sceneImageBase64');
 
         if (!vehicle) {

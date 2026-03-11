@@ -17,7 +17,15 @@ const ApprehensionSearchPage = () => {
                 setLoading(true);
                 setError(null);
                 const response = await api.get(`/public/search/${plateNumber}`);
-                setRecords(response.data.data || []);
+                // Sort to put Not Resolved (Approved) cases at the top
+                const sortedRecords = (response.data.data || []).sort((a, b) => {
+                    const statusA = a.status === 'Approved' ? 'Not Resolved' : 'Resolved';
+                    const statusB = b.status === 'Approved' ? 'Not Resolved' : 'Resolved';
+                    if (statusA === 'Not Resolved' && statusB !== 'Not Resolved') return -1;
+                    if (statusA !== 'Not Resolved' && statusB === 'Not Resolved') return 1;
+                    return new Date(b.createdAt) - new Date(a.createdAt); // Secondary sort by date descending
+                });
+                setRecords(sortedRecords);
             } catch (err) {
                 if (err.response && err.response.status === 404) {
                     setRecords([]);
@@ -156,6 +164,7 @@ const ApprehensionSearchPage = () => {
                                 <thead className="bg-[#000060] text-white">
                                     <tr>
                                         <th className="py-3 px-6 font-semibold border-r border-blue-800/30">Vehicle Type</th>
+                                        <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Status</th>
                                         <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Date</th>
                                         <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Time</th>
                                         <th className="py-3 px-6 font-semibold text-center">Details</th>
@@ -165,6 +174,15 @@ const ApprehensionSearchPage = () => {
                                     {records.map((record, index) => (
                                         <tr key={record._id || index} className="border-b border-gray-300 hover:bg-gray-50 transition-colors">
                                             <td className="py-3 px-6 h-12 font-medium text-gray-900">{record.vehicleType || 'N/A'}</td>
+                                            <td className="py-3 px-6 text-center h-12">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                                    record.status === 'Resolved' 
+                                                    ? 'bg-emerald-100 text-emerald-700' 
+                                                    : 'bg-red-100 text-red-700'
+                                                }`}>
+                                                    {record.status === 'Approved' ? 'Not Resolved' : record.status}
+                                                </span>
+                                            </td>
                                             <td className="py-3 px-6 text-center h-12">{formatDate(record.createdAt)}</td>
                                             <td className="py-3 px-6 text-center h-12">{formatTime(record.createdAt)}</td>
                                             <td className="py-3 px-6 h-12 text-center">

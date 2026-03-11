@@ -14,6 +14,7 @@ import CameraSettingsPage from './pages/app/cameras_page/CameraSettingsPage.jsx'
 import EditApprehensionPage from './pages/app/details_page/EditApprehensionPage.jsx'
 import ApprehensionsPage from './pages/app/apprehensions_page/ApprehensionsPage.jsx'
 import RejectsPage from './pages/app/apprehensions_page/RejectsPage.jsx'
+import ResolvedPage from './pages/app/apprehensions_page/ResolvedPage.jsx'
 import ProtectedRoute from './components/ProtectedComponent.jsx'
 import ApprehensionSearchPage from './pages/auth/ApprehensionSearchPage.jsx'
 import PublicApprehensionDetailsPage from './pages/auth/PublicApprehensionDetailsPage.jsx'
@@ -33,6 +34,7 @@ const App = () => {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/apprehensions/rejects" element={<RejectsPage />} />
+          <Route path="/apprehensions/resolved" element={<ResolvedPage />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/apprehensions" element={<ApprehensionsPage />} />
           <Route path="/about" element={<AboutPage />} />

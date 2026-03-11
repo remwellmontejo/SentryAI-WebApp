@@ -21,8 +21,8 @@ function LandingPage() {
         // 2. Sanitize for URL (Remove special characters)
         const cleanPlate = plateNumber.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 
-        if (cleanPlate.length > 7) {
-            toast.error("Plate number must be 7 characters or less.");
+        if (cleanPlate.length > 15) {
+            toast.error("Plate number must be 15 characters or less.");
             return;
         }
 
@@ -87,7 +87,7 @@ function LandingPage() {
                                 type="text"
                                 className="input input-bordered w-full rounded-md placeholder-gray-400 text-center uppercase text-xl font-bold tracking-widest"
                                 placeholder='AAA1234'
-                                maxLength={7}
+                                maxLength={15}
                                 value={plateNumber}
                                 onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
                                 disabled={loading}

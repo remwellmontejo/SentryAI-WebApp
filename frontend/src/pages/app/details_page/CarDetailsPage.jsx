@@ -305,6 +305,18 @@ const CarDetailsPage = () => {
                                                 </button>
                                             </div>
                                         )}
+
+                                        {/* CASE: RESOLVED */}
+                                        {currentStatus === 'resolved' && (
+                                            <div className="w-full">
+                                                <button
+                                                    onClick={() => handleStatusUpdate('Approved')}
+                                                    className="btn btn-warning w-full flex items-center justify-center gap-2 text-white"
+                                                >
+                                                    <RotateCcw size={16} /> Return to Approved
+                                                </button>
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>

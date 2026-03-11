@@ -148,11 +148,20 @@ const PublicApprehensionDetailsPage = () => {
                         <div className="flex flex-col h-min">
                             <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex-1 flex flex-col overflow-hidden">
 
-                                {/* Card Header */}
                                 <div className="p-6 border-b border-gray-200 bg-gray-50">
-                                    <div>
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Vehicle Type</p>
-                                        <h1 className="text-3xl font-extrabold text-gray-900">{vehicle.vehicleType}</h1>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Vehicle Type</p>
+                                            <h1 className="text-3xl font-extrabold text-gray-900">{vehicle.vehicleType}</h1>
+                                        </div>
+                                        <div className="text-right items-center justify-center pt-3">
+                                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${vehicle.status === 'Resolved'
+                                                ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                                : 'bg-red-100 text-red-700 border border-red-200'
+                                                }`}>
+                                                {vehicle.status === 'Approved' ? 'Not Resolved' : vehicle.status}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
