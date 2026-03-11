@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { ArrowLeft, Save, RefreshCw, Car, Hash, Activity, AlertTriangle, Loader } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Car, Hash, Activity, AlertTriangle, Loader, Video } from 'lucide-react';
 import api from "../../../lib/axios";
 import Navbar from "../../../components/Navbar";
 import toast from 'react-hot-toast';
@@ -21,12 +21,17 @@ const EditApprehensionPage = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
-    // Image Data (Read Only)
     const [imageData, setImageData] = useState({
         base64: null,
         x: 0,
         y: 0,
         confidence: 0
+    });
+    
+    // Camera Data (Read Only)
+    const [cameraData, setCameraData] = useState({
+        name: 'Unknown Camera',
+        serialNumber: 'N/A'
     });
 
     // Editable Form Data (Strictly based on Schema)
@@ -49,6 +54,12 @@ const EditApprehensionPage = () => {
                     x: data.x_coordinate,
                     y: data.y_coordinate,
                     confidence: data.confidenceScore
+                });
+                
+                // Set Camera Context
+                setCameraData({
+                    name: data.camera?.name || 'Unknown Camera',
+                    serialNumber: data.camera?.serialNumber || data.cameraSerialNumber || 'UNKNOWN_CAMERA'
                 });
 
                 // Set Form Data
@@ -258,10 +269,28 @@ const EditApprehensionPage = () => {
                                                 <option value="Pending">Pending</option>
                                                 <option value="Approved">Approved</option>
                                                 <option value="Rejected">Rejected</option>
+                                                <option value="Resolved">Resolved</option>
                                             </select>
                                         </div>
                                     </div>
 
+                                </div>
+
+                                {/* 2. Camera Source */}
+                                <div className="space-y-4 pt-4 border-t border-gray-100">
+                                    <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Capture Source</h3>
+                                    <div className="flex items-center justify-between p-3 bg-indigo-50/50 rounded-lg border border-indigo-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 rounded-lg bg-indigo-100 text-indigo-600">
+                                                <Video size={20} />
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-gray-700">{cameraData.name}</p>
+                                                <p className="text-xs font-mono text-gray-500 uppercase">SN: {cameraData.serialNumber}</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-xs font-semibold text-indigo-600 uppercase bg-indigo-100 px-2 py-1 rounded">Read Only</span>
+                                    </div>
                                 </div>
 
                             </div>

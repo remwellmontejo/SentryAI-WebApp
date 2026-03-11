@@ -6,7 +6,8 @@ import sizeOf from "image-size"; // Import image-size
 
 export async function getAllApprehendedVehicles(req, res) {
     try {
-        const vehicles = await ApprehendedVehicle.find().sort({ createdAt: -1 });
+        const vehicles = await ApprehendedVehicle.find()
+            .sort({ createdAt: -1 });
         res.status(200).json(vehicles);
     } catch (error) {
         console.error('Error fetching vehicles:', error);
@@ -57,7 +58,7 @@ export async function getApprehendedVehiclesByStatus(req, res) {
         const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 
         // Validate that the requested status is one of the allowed types
-        const allowedStatuses = ['Pending', 'Approved', 'Rejected'];
+        const allowedStatuses = ['Pending', 'Approved', 'Rejected', 'Resolved'];
         if (!allowedStatuses.includes(formattedStatus)) {
             return res.status(400).json({
                 message: "Invalid status. Must be 'Pending', 'Approved', or 'Rejected'."
@@ -65,7 +66,9 @@ export async function getApprehendedVehiclesByStatus(req, res) {
         }
 
         // Find vehicles matching the status, sorted newest to oldest
-        const vehicles = await ApprehendedVehicle.find({ status: formattedStatus }).sort({ createdAt: -1 });
+        const vehicles = await ApprehendedVehicle.find({ status: formattedStatus })
+            .sort({ createdAt: -1 })
+            .populate('camera', 'name serialNumber');
 
         res.status(200).json(vehicles);
     } catch (error) {
@@ -95,7 +98,7 @@ export async function createApprehendedVehicle(req, res) {
             return res.status(400).json({ msg: "Invalid JSON in X-Metadata" });
         }
 
-        const { vehicleType, confidenceScore, x_coordinate, y_coordinate } = metadata;
+        const { vehicleType, confidenceScore, x_coordinate, y_coordinate, cameraSerialNumber } = metadata;
 
         // --- 2. CONVERT TO BASE64 & GET DIMENSIONS ---
         const base64Image = imageBuffer.toString('base64');
@@ -178,7 +181,8 @@ export async function createApprehendedVehicle(req, res) {
             x_coordinate: x_coordinate + 7, // Store original percentage (0-100)
             y_coordinate: y_coordinate + 7, // Store original percentage (0-100)
             sceneImageBase64: base64Image,
-            status: "Pending"
+            status: "Pending",
+            cameraSerialNumber: cameraSerialNumber || "UNKNOWN_CAMERA"
         });
 
         await newApprehendedVehicle.save();
@@ -250,7 +254,9 @@ export async function getApprehendedVehicleById(req, res) {
 
         // 1. Find by ID
         // 2. IMPORTANT: Use .select('+sceneImageBase64') to include the hidden image field
-        const vehicle = await ApprehendedVehicle.findById(id).select('+sceneImageBase64');
+        const vehicle = await ApprehendedVehicle.findById(id)
+            .select('+sceneImageBase64')
+            .populate('camera', 'name serialNumber');
 
         if (!vehicle) {
             return res.status(404).json({ message: "Apprehension record not found" });
@@ -303,7 +309,7 @@ export const updateApprehendedVehicle = async (req, res) => {
         }
 
         if (status !== undefined) {
-            if (['Pending', 'Approved', 'Rejected'].includes(status)) {
+            if (['Pending', 'Approved', 'Rejected', 'Resolved'].includes(status)) {
                 vehicle.status = status;
             } else {
                 return res.status(400).json({ message: "Invalid Status" });

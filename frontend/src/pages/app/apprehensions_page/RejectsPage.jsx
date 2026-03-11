@@ -227,6 +227,7 @@ const RejectsPage = () => {
                                 <tr>
                                     <th className="py-3 px-6 font-semibold border-r border-blue-800/30">Vehicle Type</th>
                                     <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Plate Number</th>
+                                    <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Camera</th>
                                     <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Date</th>
                                     <th className="py-3 px-6 font-semibold text-center border-r border-blue-800/30">Time</th>
                                     <th className="py-3 px-6 font-semibold text-center">Details</th>
@@ -235,14 +236,15 @@ const RejectsPage = () => {
 
                             <tbody className="text-gray-700">
                                 {loading ? (
-                                    <tr><td colSpan="5" className="text-center py-12"><Loader size={32} className="text-primary animate-spin mx-auto" /></td></tr>
+                                    <tr><td colSpan="6" className="text-center py-12"><Loader size={32} className="text-primary animate-spin mx-auto" /></td></tr>
                                 ) : currentItems.length === 0 ? (
-                                    <tr><td colSpan="5" className="text-center py-12 text-gray-500">No records found.</td></tr>
+                                    <tr><td colSpan="6" className="text-center py-12 text-gray-500">No records found.</td></tr>
                                 ) : (
                                     currentItems.map((vehicle) => (
                                         <tr key={vehicle._id} className="border-b border-gray-300 hover:bg-gray-100 transition-colors">
                                             <td className="py-3 px-6 h-12 font-medium text-gray-900">{vehicle.vehicleType}</td>
                                             <td className="py-3 px-6 text-center h-12 font-mono uppercase">{vehicle.plateNumber || "N/A"}</td>
+                                            <td className="py-3 px-6 text-center h-12 text-sm text-gray-600">{vehicle.camera?.serialNumber || vehicle.cameraSerialNumber || "N/A"}</td>
                                             <td className="py-3 px-6 text-center h-12">{formatDate(vehicle.createdAt)}</td>
                                             <td className="py-3 px-6 text-center h-12">{formatTime(vehicle.createdAt)}</td>
                                             <td className="py-3 px-6 h-12 text-center">

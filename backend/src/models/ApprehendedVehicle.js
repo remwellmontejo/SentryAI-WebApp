@@ -30,12 +30,28 @@ const apprehendedVehicleSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['Pending', 'Approved', 'Rejected'],
+            enum: ['Pending', 'Approved', 'Rejected', 'Resolved'],
             default: 'Pending'
         },
+        cameraSerialNumber: {
+            type: String,
+            default: 'UNKNOWN_CAMERA'
+        }
     },
-    { timestamps: true }
+    { 
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
+    }
 );
+
+// Setup a virtual field 'camera' to map the serialNumber back to the Camera collection
+apprehendedVehicleSchema.virtual('camera', {
+    ref: 'Camera',
+    localField: 'cameraSerialNumber',
+    foreignField: 'serialNumber',
+    justOne: true // We only want one Camera object, not an array
+});
 
 const ApprehendedVehicle = mongoose.model('ApprehendedVehicle', apprehendedVehicleSchema);
 export default ApprehendedVehicle;

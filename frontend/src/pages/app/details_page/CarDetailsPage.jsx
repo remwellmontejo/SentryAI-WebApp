@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
     ArrowLeft, Edit, Trash2, Calendar, Clock, MapPin,
-    AlertCircle, CheckCircle, XCircle, Check, X, RotateCcw, AlertTriangle, Loader
+    AlertCircle, CheckCircle, XCircle, Check, X, RotateCcw, AlertTriangle, Loader,
+    ShieldCheck, Video
 } from "lucide-react";
 import toast from 'react-hot-toast';
 import api from "../../../lib/axios.js";
@@ -20,6 +21,7 @@ const getStatusStyle = (status) => {
     switch (status?.toLowerCase()) {
         case 'approved': return "bg-green-100 text-green-800 border-green-200";
         case 'rejected': return "bg-red-100 text-red-800 border-red-200";
+        case 'resolved': return "bg-emerald-100 text-emerald-800 border-emerald-200";
         case 'pending':
         default: return "bg-yellow-100 text-yellow-800 border-yellow-200";
     }
@@ -29,6 +31,7 @@ const getStatusIcon = (status) => {
     switch (status?.toLowerCase()) {
         case 'approved': return <CheckCircle size={16} />;
         case 'rejected': return <XCircle size={16} />;
+        case 'resolved': return <ShieldCheck size={16} />;
         default: return <AlertCircle size={16} />;
     }
 };
@@ -209,6 +212,20 @@ const CarDetailsPage = () => {
                                         <p className="text-base font-semibold text-gray-700">{formatTime(vehicle.createdAt)}</p>
                                     </div>
                                 </div>
+                                
+                                <div className="p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 mt-4">
+                                    <div className="flex items-center gap-2 text-indigo-600 mb-1">
+                                        <Video size={16} /> <span className="text-xs font-bold uppercase">Capture Source</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-base font-semibold text-gray-800">
+                                            {vehicle.camera?.name || 'Unknown Camera'}
+                                        </span>
+                                        <span className="text-xs font-mono text-gray-500 uppercase">
+                                            SN: {vehicle.camera?.serialNumber || vehicle.cameraSerialNumber || 'N/A'}
+                                        </span>
+                                    </div>
+                                </div>
 
                                 <div className="grid grid-rows-2 gap-y-4 pt-4 border-t border-gray-100">
                                     <div>
@@ -256,17 +273,23 @@ const CarDetailsPage = () => {
 
                                         {/* CASE: APPROVED */}
                                         {currentStatus === 'approved' && (
-                                            <div className="grid grid-cols-2 gap-3">
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <button
+                                                    onClick={() => handleStatusUpdate('Resolved')}
+                                                    className="btn btn-success flex items-center justify-center gap-2 text-white"
+                                                >
+                                                    <ShieldCheck size={16} /> Resolve
+                                                </button>
                                                 <button
                                                     onClick={() => navigate(`/apprehension/edit/${id}`)}
                                                     className="btn btn-primary flex items-center justify-center gap-2">
-                                                    <Edit size={16} /> Edit Details
+                                                    <Edit size={16} /> Edit
                                                 </button>
                                                 <button
                                                     onClick={() => setShowDeleteModal(true)} // Open Custom Modal
                                                     className="btn btn-error flex items-center justify-center gap-2 text-white"
                                                 >
-                                                    <Trash2 size={16} /> Delete Record
+                                                    <Trash2 size={16} /> Delete
                                                 </button>
                                             </div>
                                         )}
