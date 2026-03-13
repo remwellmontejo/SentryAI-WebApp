@@ -47,7 +47,8 @@ const RejectsPage = () => {
     }, []);
 
     const toDetailsPage = (id) => {
-        navigate(`/apprehension/${id}`);
+        const vehicleIds = filteredVehicles.map(v => v._id);
+        navigate(`/apprehension/${id}`, { state: { vehicleIds } });
     };
 
     // --- LOGIC: SEARCH & FILTER ---

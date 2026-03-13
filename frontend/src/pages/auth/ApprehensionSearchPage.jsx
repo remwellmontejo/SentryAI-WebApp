@@ -187,7 +187,7 @@ const ApprehensionSearchPage = () => {
                                             <td className="py-3 px-6 text-center h-12">{formatTime(record.createdAt)}</td>
                                             <td className="py-3 px-6 h-12 text-center">
                                                 <button
-                                                    onClick={() => navigate(`/public-details/${record._id}`)}
+                                                    onClick={() => navigate(`/public-details/${record._id}`, { state: { vehicleIds: records.map(r => r._id) } })}
                                                     className="text-gray-500 hover:text-[#000060] transition-colors p-1 rounded-full hover:bg-blue-50"
                                                     title="View Photo Evidence & Full Details"
                                                 >

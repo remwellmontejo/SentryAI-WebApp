@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router';
-import { ArrowLeft, Calendar, Clock, MapPin, AlertTriangle, Loader } from 'lucide-react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router';
+import { ArrowLeft, Calendar, Clock, MapPin, AlertTriangle, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
 import SentryAILogo from '../../assets/sentry-ai-logo.svg?react';
 import api from '../../lib/axios';
 
@@ -14,6 +14,26 @@ const getSquarePosition = (x, y) => {
 const PublicApprehensionDetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    
+    const vehicleIds = location.state?.vehicleIds || [];
+    
+    // Find current index
+    const currentIndex = vehicleIds.findIndex(vid => vid === id);
+    const hasPrevious = currentIndex > 0;
+    const hasNext = currentIndex !== -1 && currentIndex < vehicleIds.length - 1;
+
+    const handlePrevious = () => {
+        if (hasPrevious) {
+            navigate(`/public-details/${vehicleIds[currentIndex - 1]}`, { state: { vehicleIds } });
+        }
+    };
+
+    const handleNext = () => {
+        if (hasNext) {
+            navigate(`/public-details/${vehicleIds[currentIndex + 1]}`, { state: { vehicleIds } });
+        }
+    };
 
     const [vehicle, setVehicle] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -83,9 +103,40 @@ const PublicApprehensionDetailsPage = () => {
                 </div>
             </div>
 
-            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Loading State */}
-                {loading && (
+            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+                {/* Pagination Controls */}
+                {vehicleIds.length > 1 && !error && (
+                    <div className="flex items-center justify-end mb-6 gap-2">
+                        <button
+                            onClick={handlePrevious}
+                            disabled={!hasPrevious || loading}
+                            className={`flex items-center gap-1 px-4 py-2 rounded-lg border font-medium transition-colors ${
+                                hasPrevious && !loading
+                                ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50 shadow-sm' 
+                                : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                        >
+                            {loading ? <Loader size={18} className="animate-spin" /> : <ChevronLeft size={18} />} Previous
+                        </button>
+                        <div className="bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm text-sm font-bold text-gray-600">
+                            {currentIndex + 1} / {vehicleIds.length}
+                        </div>
+                        <button
+                            onClick={handleNext}
+                            disabled={!hasNext || loading}
+                            className={`flex items-center gap-1 px-4 py-2 rounded-lg border font-medium transition-colors ${
+                                hasNext && !loading
+                                ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50 shadow-sm' 
+                                : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                        >
+                           Next {loading ? <Loader size={18} className="animate-spin" /> : <ChevronRight size={18} />}
+                        </button>
+                    </div>
+                )}
+                
+                {/* Loading State for initial fetch */}
+                {loading && !vehicle && (
                     <div className="flex flex-col items-center justify-center py-20">
                         <Loader size={48} className="text-primary animate-spin mb-4" />
                         <p className="text-gray-500 text-lg font-medium">Loading details...</p>
@@ -109,9 +160,15 @@ const PublicApprehensionDetailsPage = () => {
                 )}
 
                 {/* Vehicle Details */}
-                {!loading && !error && vehicle && (
-                    <div className="grid lg:grid-cols-2 gap-8 lg:items-center">
-
+                {!error && vehicle && (
+                    <div className="grid lg:grid-cols-2 gap-8 lg:items-center relative">
+                        {/* Inner Loader when fetching next/prev data */}
+                        {loading && (
+                            <div className="absolute inset-0 bg-gray-50/60 backdrop-blur-sm z-30 flex items-center justify-center rounded-xl">
+                                <Loader size={48} className="text-blue-600 animate-spin" />
+                            </div>
+                        )}
+                        
                         {/* LEFT: IMAGE SECTION */}
                         {vehicle.sceneImageBase64 ? (
                             <div className="bg-white">

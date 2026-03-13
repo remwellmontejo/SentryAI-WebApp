@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useLocation } from "react-router";
 import {
     ArrowLeft, Edit, Trash2, Calendar, Clock, MapPin,
     AlertCircle, CheckCircle, XCircle, Check, X, RotateCcw, AlertTriangle, Loader,
-    ShieldCheck, Video
+    ShieldCheck, Video, ChevronLeft, ChevronRight
 } from "lucide-react";
 import toast from 'react-hot-toast';
 import api from "../../../lib/axios.js";
@@ -39,6 +39,25 @@ const getStatusIcon = (status) => {
 const CarDetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const vehicleIds = location.state?.vehicleIds || [];
+    
+    // Find current index
+    const currentIndex = vehicleIds.findIndex(vid => vid === id);
+    const hasPrevious = currentIndex > 0;
+    const hasNext = currentIndex !== -1 && currentIndex < vehicleIds.length - 1;
+
+    const handlePrevious = () => {
+        if (hasPrevious) {
+            navigate(`/apprehension/${vehicleIds[currentIndex - 1]}`, { state: { vehicleIds } });
+        }
+    };
+
+    const handleNext = () => {
+        if (hasNext) {
+            navigate(`/apprehension/${vehicleIds[currentIndex + 1]}`, { state: { vehicleIds } });
+        }
+    };
 
     const [vehicle, setVehicle] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -52,6 +71,7 @@ const CarDetailsPage = () => {
     useEffect(() => {
         const fetchDetails = async () => {
             try {
+                setLoading(true);
                 const response = await api.get(`/api/apprehended-vehicle/${id}`);
                 setVehicle(response.data);
                 setLoading(false);
@@ -104,7 +124,7 @@ const CarDetailsPage = () => {
         });
     };
 
-    if (loading) return <div className="min-h-screen flex flex-col items-center justify-center"><Loader size={48} className="text-primary animate-spin mb-4" /><p className="text-gray-500 text-lg font-medium">Loading details...</p></div>;
+    if (loading && !vehicle) return <div className="min-h-screen flex flex-col items-center justify-center"><Loader size={48} className="text-primary animate-spin mb-4" /><p className="text-gray-500 text-lg font-medium">Loading details...</p></div>;
     if (!vehicle) return <div className="min-h-screen flex items-center justify-center">No Data</div>;
 
     const locationString = vehicle.x_coordinate !== undefined && vehicle.y_coordinate !== undefined
@@ -118,14 +138,51 @@ const CarDetailsPage = () => {
             <Navbar />
             <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-                {/* Back Button */}
+                {/* Top Actions: Back + Pagination */}
                 <div className="flex items-center justify-between mb-6">
                     <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium">
                         <ArrowLeft size={20} /> Back
                     </button>
+
+                    {vehicleIds.length > 1 && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handlePrevious}
+                                disabled={!hasPrevious || loading}
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+                                    hasPrevious && !loading
+                                    ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50' 
+                                    : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                                }`}
+                            >
+                                {loading ? <Loader size={16} className="animate-spin" /> : <ChevronLeft size={16} />} Prev
+                            </button>
+                            <span className="text-sm font-medium text-gray-500 px-2 min-w-[60px] text-center">
+                                {currentIndex + 1} / {vehicleIds.length}
+                            </span>
+                            <button
+                                onClick={handleNext}
+                                disabled={!hasNext || loading}
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
+                                    hasNext && !loading
+                                    ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50' 
+                                    : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                                }`}
+                            >
+                                Next {loading ? <Loader size={16} className="animate-spin" /> : <ChevronRight size={16} />}
+                            </button>
+                        </div>
+                    )}
                 </div>
 
-                <div className="grid lg:grid-cols-2 gap-8 lg:items-center">
+                <div className="grid lg:grid-cols-2 gap-8 lg:items-center relative">
+                    {/* Inner Loader when fetching new data */}
+                    {loading && vehicle && (
+                         <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-30 flex items-center justify-center rounded-xl">
+                             <Loader size={48} className="text-blue-600 animate-spin" />
+                         </div>
+                    )}
+
                     {/* --- LEFT: IMAGE SECTION --- */}
                     {vehicle.sceneImageBase64 ? (
                         <div className="bg-white">
