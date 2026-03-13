@@ -28,7 +28,7 @@ export const getDashboardStats = async (req, res) => {
             pendingReview,
             apprehendedToday
         ] = await Promise.all([
-            ApprehendedVehicle.countDocuments(),
+            ApprehendedVehicle.countDocuments({ status: { $in: ['Approved', 'Resolved'] } }),
             ApprehendedVehicle.countDocuments({ status: 'Pending' }),
             ApprehendedVehicle.countDocuments({ createdAt: { $gte: startOfToday } })
         ]);
