@@ -31,8 +31,8 @@ const CameraSettingsPage = () => {
         streamResolution: 1,
         apprehensionTimer: 3000,
         zoneEnabled: false,
-        polyX: [0, 100, 100, 0],
-        polyY: [0, 0, 100, 100]
+        polyX: [20, 80, 100, 80, 20, 0],
+        polyY: [0, 0, 50, 100, 100, 50]
     });
 
     const [tempPoints, setTempPoints] = useState([]);
@@ -117,10 +117,9 @@ const CameraSettingsPage = () => {
 
     // --- HANDLERS ---
     const handleImageClick = (e) => {
-        // Use the smoothed 'isOnline' state
         if (!isOnline) return;
         if (!containerRef.current) return;
-        if (tempPoints.length >= 4) return;
+        if (tempPoints.length >= 6) return; // <--- CHANGE TO 6
 
         const rect = containerRef.current.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -129,7 +128,7 @@ const CameraSettingsPage = () => {
         const newPoints = [...tempPoints, { x: Math.round(x), y: Math.round(y) }];
         setTempPoints(newPoints);
 
-        if (newPoints.length === 4) {
+        if (newPoints.length === 6) { // <--- CHANGE TO 6
             setConfig(prev => ({
                 ...prev,
                 polyX: newPoints.map(p => p.x),
@@ -257,17 +256,18 @@ const CameraSettingsPage = () => {
                                     </button>
                                 </div>
 
+                                {/* Bottom Left Status Text */}
                                 <div className="absolute bottom-4 left-4 pointer-events-none">
                                     <div className="bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-lg shadow-sm">
-                                        {tempPoints.length === 4
+                                        {tempPoints.length === 6
                                             ? <span className="text-green-400 font-bold flex items-center gap-1"><CheckCircle size={12} /> Zone Set</span>
-                                            : `Click Point ${tempPoints.length + 1}/4`}
+                                            : `Click Point ${tempPoints.length + 1}/6`}
                                     </div>
                                 </div>
                             </div>
 
                             <p className="text-center text-sm text-gray-500">
-                                {isOnline ? "Click 4 corners on the video to define the detection zone." : "Connect camera to edit zone."}
+                                {isOnline ? "Click 6 corners on the video to define the detection zone." : "Connect camera to edit zone."}
                             </p>
                         </div>
                     </div>
