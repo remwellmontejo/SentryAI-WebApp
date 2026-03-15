@@ -175,7 +175,7 @@ const ApprehensionSearchPage = () => {
                                         <tr key={record._id || index} className="border-b border-gray-300 hover:bg-gray-50 transition-colors">
                                             <td className="py-3 px-6 h-12 font-medium text-gray-900">{record.vehicleType || 'N/A'}</td>
                                             <td className="py-3 px-6 text-center h-12">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                                <span className={`inline-block whitespace-nowrap px-2 py-1 rounded-full text-xs font-semibold ${
                                                     record.status === 'Resolved' 
                                                     ? 'bg-emerald-100 text-emerald-700' 
                                                     : 'bg-red-100 text-red-700'

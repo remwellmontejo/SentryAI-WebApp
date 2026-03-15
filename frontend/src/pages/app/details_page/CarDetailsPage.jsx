@@ -49,13 +49,13 @@ const CarDetailsPage = () => {
 
     const handlePrevious = () => {
         if (hasPrevious) {
-            navigate(`/apprehension/${vehicleIds[currentIndex - 1]}`, { state: { vehicleIds } });
+            navigate(`/apprehension/${vehicleIds[currentIndex - 1]}`, { state: { vehicleIds }, replace: true });
         }
     };
 
     const handleNext = () => {
         if (hasNext) {
-            navigate(`/apprehension/${vehicleIds[currentIndex + 1]}`, { state: { vehicleIds } });
+            navigate(`/apprehension/${vehicleIds[currentIndex + 1]}`, { state: { vehicleIds }, replace: true });
         }
     };
 
@@ -283,6 +283,41 @@ const CarDetailsPage = () => {
                                         </span>
                                     </div>
                                 </div>
+
+                                {/* ACTION HISTORY BOX */}
+                                {(vehicle.editedBy || vehicle.approvedBy || vehicle.rejectedBy || vehicle.resolvedBy) && (
+                                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mt-4 space-y-2">
+                                        <div className="flex items-center gap-2 text-gray-600 mb-2 border-b border-gray-200 pb-2">
+                                            <ShieldCheck size={16} /> <span className="text-xs font-bold uppercase tracking-wider">Audit Trail</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            {vehicle.editedBy && (
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-semibold text-gray-400 uppercase">Last Edited By</span>
+                                                    <span className="font-medium text-gray-800">{vehicle.editedBy}</span>
+                                                </div>
+                                            )}
+                                            {vehicle.approvedBy && (
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-semibold text-gray-400 uppercase">Approved By</span>
+                                                    <span className="font-medium text-gray-800">{vehicle.approvedBy}</span>
+                                                </div>
+                                            )}
+                                            {vehicle.rejectedBy && (
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-semibold text-gray-400 uppercase">Rejected By</span>
+                                                    <span className="font-medium text-gray-800">{vehicle.rejectedBy}</span>
+                                                </div>
+                                            )}
+                                            {vehicle.resolvedBy && (
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-semibold text-gray-400 uppercase">Resolved By</span>
+                                                    <span className="font-medium text-gray-800">{vehicle.resolvedBy}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="grid grid-rows-2 gap-y-4 pt-4 border-t border-gray-100">
                                     <div>

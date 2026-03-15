@@ -11,6 +11,9 @@ import authRoutes from './routes/AuthRoutes.js';
 import cameraRoutes from './routes/CameraRoutes.js';
 import Camera from './models/Camera.js';
 import publicApprehensionsRoutes from './routes/PublicApprehensionsRoutes.js'
+import UserRouter from './routes/UserRoutes.js'
+import SystemLogRouter from './routes/SystemLogRoutes.js'
+import NotificationRouter from './routes/NotificationRoutes.js'
 
 const app = express();
 const __dirname = path.resolve();
@@ -56,6 +59,9 @@ app.use("/api/apprehended-vehicle", apprehendedCarRoutes);
 app.use("/auth", authRoutes);
 app.use("/api/cameras", cameraRoutes);
 app.use("/public", publicApprehensionsRoutes);
+app.use("/api/users", UserRouter);
+app.use("/api/logs", SystemLogRouter);
+app.use("/api/notifications", NotificationRouter);
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });

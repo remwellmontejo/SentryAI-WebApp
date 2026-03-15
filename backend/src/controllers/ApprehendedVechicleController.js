@@ -3,6 +3,8 @@ import Camera from '../models/Camera.js';
 import fetch from "node-fetch";
 import FormData from "form-data";
 import sizeOf from "image-size"; // Import image-size
+import { createSysLog } from './SystemLogController.js'; // IMPORT LOGGING
+import { createNotification } from './NotificationController.js';
 
 export async function getAllApprehendedVehicles(req, res) {
     try {
@@ -186,6 +188,14 @@ export async function createApprehendedVehicle(req, res) {
         });
 
         await newApprehendedVehicle.save();
+
+        // UNIQUE TRIGGER: Notifying Admins of New Upload
+        await createNotification(
+            `A new ${vehicleType} apprehension was uploaded from camera ${cameraSerialNumber || "UNKNOWN"}`, 
+            'NEW_APPREHENSION', 
+            newApprehendedVehicle._id
+        );
+
         res.status(200).json({ message: 'Created', plate: detectedPlateNumber });
 
     } catch (error) {
@@ -277,7 +287,22 @@ export async function statusUpdateApprehendedVehicle(req, res) {
         if (!vehicle) {
             return res.status(404).json({ message: "Apprehension record not found" });
         }
+
         vehicle.status = status;
+
+        // Track who performed the action using the JWT decoded user object
+        const actionUser = req.user?.username || "System";
+        if (status === 'Approved') {
+            vehicle.approvedBy = actionUser;
+        } else if (status === 'Rejected') {
+            vehicle.rejectedBy = actionUser;
+        } else if (status === 'Resolved') {
+            vehicle.resolvedBy = actionUser;
+        }
+
+        // CREATE SYSTEM LOG
+        await createSysLog(actionUser, 'UPDATE_APPREHENSION_STATUS', `Changed status of apprehension ${id} (${vehicle.plateNumber || 'Unknown Plate'}) to ${status}`);
+
         await vehicle.save();
         res.status(200).json({ message: 'Apprehended vehicle status updated successfully!' });
     } catch (error) {
@@ -296,29 +321,51 @@ export const updateApprehendedVehicle = async (req, res) => {
             return res.status(404).json({ message: "Apprehension record not found" });
         }
 
-        if (plateNumber !== undefined) {
+        let isEdited = false;
+        let changes = [];
+
+        if (plateNumber !== undefined && vehicle.plateNumber !== plateNumber.toUpperCase()) {
+            changes.push(`plate from ${vehicle.plateNumber || 'Null'} to ${plateNumber.toUpperCase()}`);
             vehicle.plateNumber = plateNumber.toUpperCase();
+            isEdited = true;
         }
 
-        if (vehicleType !== undefined) {
+        if (vehicleType !== undefined && vehicle.vehicleType !== vehicleType) {
             if (['Car', 'Motorcycle'].includes(vehicleType)) {
+                changes.push(`type from ${vehicle.vehicleType} to ${vehicleType}`);
                 vehicle.vehicleType = vehicleType;
+                isEdited = true;
             } else {
                 return res.status(400).json({ message: "Invalid Vehicle Type. Must be 'Car' or 'Motorcycle'" });
             }
         }
 
-        if (status !== undefined) {
+        if (status !== undefined && vehicle.status !== status) {
             if (['Pending', 'Approved', 'Rejected', 'Resolved'].includes(status)) {
                 vehicle.status = status;
+                
+                // Track status changes here if they happen through the update route
+                const actionUser = req.user?.username || "System";
+                if (status === 'Approved') vehicle.approvedBy = actionUser;
+                if (status === 'Rejected') vehicle.rejectedBy = actionUser;
+                if (status === 'Resolved') vehicle.resolvedBy = actionUser;
+
+                changes.push(`status to ${status}`);
+                isEdited = true;
             } else {
                 return res.status(400).json({ message: "Invalid Status" });
             }
         }
 
+        if (isEdited) {
+            vehicle.editedBy = req.user?.username || "System";
+            // CREATE SYSTEM LOG
+            await createSysLog(vehicle.editedBy, 'EDIT_APPREHENSION', `Edited apprehension ${id} (${changes.length > 0 ? changes.join(', ') : 'unknown changes'})`);
+        }
+
         const updatedVehicle = await vehicle.save();
 
-        console.log(`[UPDATE] Updated Apprehension ${id} | Status: ${updatedVehicle.status}`);
+        console.log(`[UPDATE] Updated Apprehension ${id} | Status: ${updatedVehicle.status} | Edited By: ${updatedVehicle.editedBy}`);
         res.status(200).json(updatedVehicle);
 
     } catch (error) {

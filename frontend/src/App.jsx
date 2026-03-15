@@ -18,12 +18,24 @@ import ResolvedPage from './pages/app/apprehensions_page/ResolvedPage.jsx'
 import ProtectedRoute from './components/ProtectedComponent.jsx'
 import ApprehensionSearchPage from './pages/auth/ApprehensionSearchPage.jsx'
 import PublicApprehensionDetailsPage from './pages/auth/PublicApprehensionDetailsPage.jsx'
+import AccountsPage from './pages/admin/AccountsPage.jsx'
+import LogsPage from './pages/admin/LogsPage.jsx'
 
 const App = () => {
   return (
     <div>
       {/* 2. ADD THE TOASTER HERE */}
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster
+        position="top-center"
+        containerStyle={{ top: 30 }}
+        reverseOrder={false}
+        toastOptions={{
+          style: {
+            border: '1px solid #cbd5e1',
+          },
+        }}
+        duration={1000}
+      />
 
       <Routes>
         <Route path="/register" element={<RegisterPage />} />
@@ -33,6 +45,8 @@ const App = () => {
         <Route path="/public-details/:id" element={<PublicApprehensionDetailsPage />} />
 
         <Route element={<ProtectedRoute />}>
+          <Route path="/admin/accounts" element={<AccountsPage />} />
+          <Route path="/admin/logs" element={<LogsPage />} />
           <Route path="/apprehensions/rejects" element={<RejectsPage />} />
           <Route path="/apprehensions/resolved" element={<ResolvedPage />} />
           <Route path="/home" element={<HomePage />} />

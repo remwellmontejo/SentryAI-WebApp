@@ -36,6 +36,22 @@ const apprehendedVehicleSchema = new mongoose.Schema(
         cameraSerialNumber: {
             type: String,
             default: 'UNKNOWN_CAMERA'
+        },
+        editedBy: {
+            type: String,
+            default: null
+        },
+        approvedBy: {
+            type: String,
+            default: null
+        },
+        rejectedBy: {
+            type: String,
+            default: null
+        },
+        resolvedBy: {
+            type: String,
+            default: null
         }
     },
     { 

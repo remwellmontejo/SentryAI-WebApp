@@ -25,13 +25,13 @@ const PublicApprehensionDetailsPage = () => {
 
     const handlePrevious = () => {
         if (hasPrevious) {
-            navigate(`/public-details/${vehicleIds[currentIndex - 1]}`, { state: { vehicleIds } });
+            navigate(`/public-details/${vehicleIds[currentIndex - 1]}`, { state: { vehicleIds }, replace: true });
         }
     };
 
     const handleNext = () => {
         if (hasNext) {
-            navigate(`/public-details/${vehicleIds[currentIndex + 1]}`, { state: { vehicleIds } });
+            navigate(`/public-details/${vehicleIds[currentIndex + 1]}`, { state: { vehicleIds }, replace: true });
         }
     };
 
