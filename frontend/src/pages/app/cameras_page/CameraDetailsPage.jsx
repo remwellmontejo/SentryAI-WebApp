@@ -383,7 +383,7 @@ const CameraDetailsPage = () => {
                                             <input
                                                 type="range"
                                                 min="90"
-                                                max="140"
+                                                max="130"
                                                 value={servoState?.tilt ?? 90}
                                                 onChange={(e) => handleSliderChange('tilt', e.target.value)}
                                                 disabled={isControlDisabled}
