@@ -35,10 +35,13 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        const user = await UserModel.findOne({ email });
+        const { identifier, password } = req.body;
+        // Allow login with email OR username
+        const user = await UserModel.findOne({
+            $or: [{ email: identifier }, { username: identifier }]
+        });
         if (!user) {
-            return res.status(403).json({ message: "Email or password is incorrect.", success: false });
+            return res.status(403).json({ message: "Email/Username or password is incorrect.", success: false });
         }
         if (user.status !== 'active') {
             return res.status(403).json({ message: "Your account is not yet activated. Please contact an administrator.", success: false });
@@ -53,12 +56,12 @@ const login = async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        await createSysLog(user.username, 'USER_LOGIN', `User logged in from ${email}`);
+        await createSysLog(user.username, 'USER_LOGIN', `User logged in (${user.email})`);
 
         return res.status(200).json({
             message: "Login successful",
             token: jwtToken, 
-            email: email,
+            email: user.email,
             username: user.username,
             firstName: user.firstName || '',
             lastName: user.lastName || '',

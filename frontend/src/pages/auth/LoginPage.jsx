@@ -7,7 +7,7 @@ import api from '../../lib/axios.js';
 
 function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState('');
+    const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -16,11 +16,11 @@ function LoginPage() {
         event.preventDefault();
 
         const formData = {
-            email: email,
+            identifier: identifier,
             password: password,
         };
 
-        if (!formData.email || !formData.password) {
+        if (!formData.identifier || !formData.password) {
             return toast.error('Please fill in all fields.');
         }
 
@@ -28,7 +28,7 @@ function LoginPage() {
         setLoading(true);
         try {
             const response = await api.post('/auth/login', {
-                email: formData.email,
+                identifier: formData.identifier,
                 password: formData.password,
             });
             navigate('/home');
@@ -97,13 +97,14 @@ function LoginPage() {
                         </div>
                         <div>
                             <label className="label">
-                                <span className="label-text text-black">Email</span>
+                                <span className="label-text text-black">Email or Username</span>
                             </label>
                             <input
-                                type="email"
+                                type="text"
+                                placeholder="Enter your email or username"
                                 className="input input-bordered w-full rounded-md placeholder-gray-500"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
                                 disabled={loading}
                             />
                         </div>
