@@ -72,7 +72,7 @@ const Navbar = () => {
         }
         setShowDropdown(false);
         if (notification.referenceId) {
-            navigate(`/public-details/${notification.referenceId}`);
+            navigate(`/apprehension/${notification.referenceId}`);
         }
     };
 

@@ -15,9 +15,9 @@ const PublicApprehensionDetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    
+
     const vehicleIds = location.state?.vehicleIds || [];
-    
+
     // Find current index
     const currentIndex = vehicleIds.findIndex(vid => vid === id);
     const hasPrevious = currentIndex > 0;
@@ -110,11 +110,10 @@ const PublicApprehensionDetailsPage = () => {
                         <button
                             onClick={handlePrevious}
                             disabled={!hasPrevious || loading}
-                            className={`flex items-center gap-1 px-4 py-2 rounded-lg border font-medium transition-colors ${
-                                hasPrevious && !loading
-                                ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50 shadow-sm' 
-                                : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                            }`}
+                            className={`flex items-center gap-1 px-4 py-2 rounded-lg border font-medium transition-colors ${hasPrevious && !loading
+                                    ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50 shadow-sm'
+                                    : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                                }`}
                         >
                             {loading ? <Loader size={18} className="animate-spin" /> : <ChevronLeft size={18} />} Previous
                         </button>
@@ -124,17 +123,16 @@ const PublicApprehensionDetailsPage = () => {
                         <button
                             onClick={handleNext}
                             disabled={!hasNext || loading}
-                            className={`flex items-center gap-1 px-4 py-2 rounded-lg border font-medium transition-colors ${
-                                hasNext && !loading
-                                ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50 shadow-sm' 
-                                : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                            }`}
+                            className={`flex items-center gap-1 px-4 py-2 rounded-lg border font-medium transition-colors ${hasNext && !loading
+                                    ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50 shadow-sm'
+                                    : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                                }`}
                         >
-                           Next {loading ? <Loader size={18} className="animate-spin" /> : <ChevronRight size={18} />}
+                            Next {loading ? <Loader size={18} className="animate-spin" /> : <ChevronRight size={18} />}
                         </button>
                     </div>
                 )}
-                
+
                 {/* Loading State for initial fetch */}
                 {loading && !vehicle && (
                     <div className="flex flex-col items-center justify-center py-20">
@@ -168,7 +166,7 @@ const PublicApprehensionDetailsPage = () => {
                                 <Loader size={48} className="text-blue-600 animate-spin" />
                             </div>
                         )}
-                        
+
                         {/* LEFT: IMAGE SECTION */}
                         {vehicle.sceneImageBase64 ? (
                             <div className="bg-white">
@@ -245,22 +243,6 @@ const PublicApprehensionDetailsPage = () => {
                                                 <Clock size={16} /> <span className="text-xs font-bold uppercase">Time</span>
                                             </div>
                                             <p className="text-base font-semibold text-gray-700">{formatTime(vehicle.createdAt)}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-rows-2 gap-y-4 pt-4 border-t border-gray-100">
-                                        <div>
-                                            <span className="block text-sm font-bold text-gray-900 uppercase tracking-wider mb-1">Confidence Level</span>
-                                            <span className="font-medium text-gray-700">{vehicle.confidenceScore}%</span>
-                                        </div>
-                                        <div>
-                                            <span className="block text-sm font-bold text-gray-900 uppercase tracking-wider mb-1">Centroid Location</span>
-                                            <div className="flex items-center gap-1 text-gray-600 font-medium text-sm">
-                                                <MapPin size={12} />
-                                                {vehicle.x_coordinate !== undefined && vehicle.y_coordinate !== undefined
-                                                    ? `X: ${vehicle.x_coordinate}%, Y: ${vehicle.y_coordinate}%`
-                                                    : "Unknown"}
-                                            </div>
                                         </div>
                                     </div>
                                 </div>

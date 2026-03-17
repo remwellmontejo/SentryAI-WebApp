@@ -41,7 +41,7 @@ const CarDetailsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const vehicleIds = location.state?.vehicleIds || [];
-    
+
     // Find current index
     const currentIndex = vehicleIds.findIndex(vid => vid === id);
     const hasPrevious = currentIndex > 0;
@@ -100,7 +100,16 @@ const CarDetailsPage = () => {
 
             // Close modal if it was open
             setShowDeleteModal(false);
-            navigate(-1);
+
+            const updatedVehicleIds = vehicleIds.filter(vid => vid !== id);
+
+            if (hasNext) {
+                navigate(`/apprehension/${vehicleIds[currentIndex + 1]}`, { state: { vehicleIds: updatedVehicleIds }, replace: true });
+            } else if (hasPrevious) {
+                navigate(`/apprehension/${vehicleIds[currentIndex - 1]}`, { state: { vehicleIds: updatedVehicleIds }, replace: true });
+            } else {
+                navigate(-1);
+            }
         } catch (err) {
             console.error("Error updating status:", err);
             toast.error("Failed to update status.", { id: toastId });
@@ -133,6 +142,14 @@ const CarDetailsPage = () => {
 
     const currentStatus = vehicle.status?.toLowerCase() || 'pending';
 
+    const lastAction = (() => {
+        if (currentStatus === 'resolved' && vehicle.resolvedBy) return { label: 'Resolved By', user: vehicle.resolvedBy };
+        if (currentStatus === 'rejected' && vehicle.rejectedBy) return { label: 'Rejected By', user: vehicle.rejectedBy };
+        if (currentStatus === 'approved' && vehicle.approvedBy) return { label: 'Approved By', user: vehicle.approvedBy };
+        if (vehicle.editedBy) return { label: 'Last Edited By', user: vehicle.editedBy };
+        return null;
+    })();
+
     return (
         <div className="min-h-screen bg-gray-50" data-theme="corporateBlue">
             <Navbar />
@@ -149,11 +166,10 @@ const CarDetailsPage = () => {
                             <button
                                 onClick={handlePrevious}
                                 disabled={!hasPrevious || loading}
-                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-                                    hasPrevious && !loading
-                                    ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50' 
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${hasPrevious && !loading
+                                    ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50'
                                     : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                                }`}
+                                    }`}
                             >
                                 {loading ? <Loader size={16} className="animate-spin" /> : <ChevronLeft size={16} />} Prev
                             </button>
@@ -163,11 +179,10 @@ const CarDetailsPage = () => {
                             <button
                                 onClick={handleNext}
                                 disabled={!hasNext || loading}
-                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-                                    hasNext && !loading
-                                    ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50' 
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${hasNext && !loading
+                                    ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50'
                                     : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                                }`}
+                                    }`}
                             >
                                 Next {loading ? <Loader size={16} className="animate-spin" /> : <ChevronRight size={16} />}
                             </button>
@@ -178,9 +193,9 @@ const CarDetailsPage = () => {
                 <div className="grid lg:grid-cols-2 gap-8 lg:items-center relative">
                     {/* Inner Loader when fetching new data */}
                     {loading && vehicle && (
-                         <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-30 flex items-center justify-center rounded-xl">
-                             <Loader size={48} className="text-blue-600 animate-spin" />
-                         </div>
+                        <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-30 flex items-center justify-center rounded-xl">
+                            <Loader size={48} className="text-blue-600 animate-spin" />
+                        </div>
                     )}
 
                     {/* --- LEFT: IMAGE SECTION --- */}
@@ -269,7 +284,7 @@ const CarDetailsPage = () => {
                                         <p className="text-base font-semibold text-gray-700">{formatTime(vehicle.createdAt)}</p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="p-3 bg-indigo-50/50 rounded-lg border border-indigo-100 mt-4">
                                     <div className="flex items-center gap-2 text-indigo-600 mb-1">
                                         <Video size={16} /> <span className="text-xs font-bold uppercase">Capture Source</span>
@@ -285,49 +300,35 @@ const CarDetailsPage = () => {
                                 </div>
 
                                 {/* ACTION HISTORY BOX */}
-                                {(vehicle.editedBy || vehicle.approvedBy || vehicle.rejectedBy || vehicle.resolvedBy) && (
+                                {lastAction && (
                                     <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mt-4 space-y-2">
                                         <div className="flex items-center gap-2 text-gray-600 mb-2 border-b border-gray-200 pb-2">
-                                            <ShieldCheck size={16} /> <span className="text-xs font-bold uppercase tracking-wider">Audit Trail</span>
+                                            <ShieldCheck size={16} /> <span className="text-xs font-bold uppercase tracking-wider">Last Action Done</span>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-3 text-sm">
-                                            {vehicle.editedBy && (
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs font-semibold text-gray-400 uppercase">Last Edited By</span>
-                                                    <span className="font-medium text-gray-800">{vehicle.editedBy}</span>
-                                                </div>
-                                            )}
-                                            {vehicle.approvedBy && (
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs font-semibold text-gray-400 uppercase">Approved By</span>
-                                                    <span className="font-medium text-gray-800">{vehicle.approvedBy}</span>
-                                                </div>
-                                            )}
-                                            {vehicle.rejectedBy && (
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs font-semibold text-gray-400 uppercase">Rejected By</span>
-                                                    <span className="font-medium text-gray-800">{vehicle.rejectedBy}</span>
-                                                </div>
-                                            )}
-                                            {vehicle.resolvedBy && (
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs font-semibold text-gray-400 uppercase">Resolved By</span>
-                                                    <span className="font-medium text-gray-800">{vehicle.resolvedBy}</span>
-                                                </div>
-                                            )}
+                                        <div className="text-sm">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-semibold text-gray-400 uppercase">{lastAction.label}</span>
+                                                <span className="font-medium text-gray-800">{lastAction.user}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
 
-                                <div className="grid grid-rows-2 gap-y-4 pt-4 border-t border-gray-100">
-                                    <div>
-                                        <span className="block text-sm font-bold text-gray-900 uppercase tracking-wider mb-1">Confidence Level</span>
-                                        <span className="font-medium text-gray-700">{vehicle.confidenceScore}%</span>
+                                {/* DETECTION DETAILS BOX */}
+                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 mt-4 space-y-2">
+                                    <div className="flex items-center gap-2 text-gray-600 mb-2 border-b border-gray-200 pb-2">
+                                        <AlertCircle size={16} /> <span className="text-xs font-bold uppercase tracking-wider">Detection Details</span>
                                     </div>
-                                    <div>
-                                        <span className="block text-sm font-bold text-gray-900 uppercase tracking-wider mb-1">Centroid Location</span>
-                                        <div className="flex items-center gap-1 text-gray-600 font-medium text-sm">
-                                            <MapPin size={12} /> {locationString}
+                                    <div className="flex flex-col gap-3 text-sm">
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-semibold text-gray-400 uppercase">Confidence Level</span>
+                                            <span className="font-medium text-gray-800">{vehicle.confidenceScore}%</span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-semibold text-gray-400 uppercase">Centroid Location</span>
+                                            <div className="flex items-center gap-1 text-gray-800 font-medium">
+                                                <MapPin size={14} className="text-gray-400" /> {locationString}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
