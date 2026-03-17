@@ -2,6 +2,8 @@ import joi from 'joi';
 
 const registerValidation = (req, res, next) => {
     const schema = joi.object({
+        firstName: joi.string().max(50).optional().allow(''),
+        lastName: joi.string().max(50).optional().allow(''),
         username: joi.string().alphanum().min(3).max(30).required(),
         email: joi.string().email().required(),
         password: joi.string().min(6).required()

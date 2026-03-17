@@ -291,7 +291,9 @@ export async function statusUpdateApprehendedVehicle(req, res) {
         vehicle.status = status;
 
         // Track who performed the action using the JWT decoded user object
-        const actionUser = req.user?.username || "System";
+        const actionUser = (req.user?.firstName && req.user?.lastName)
+            ? `${req.user.firstName} ${req.user.lastName}`
+            : (req.user?.username || "System");
         if (status === 'Approved') {
             vehicle.approvedBy = actionUser;
         } else if (status === 'Rejected') {
@@ -345,7 +347,9 @@ export const updateApprehendedVehicle = async (req, res) => {
                 vehicle.status = status;
                 
                 // Track status changes here if they happen through the update route
-                const actionUser = req.user?.username || "System";
+                const actionUser = (req.user?.firstName && req.user?.lastName)
+                    ? `${req.user.firstName} ${req.user.lastName}`
+                    : (req.user?.username || "System");
                 if (status === 'Approved') vehicle.approvedBy = actionUser;
                 if (status === 'Rejected') vehicle.rejectedBy = actionUser;
                 if (status === 'Resolved') vehicle.resolvedBy = actionUser;
@@ -358,7 +362,10 @@ export const updateApprehendedVehicle = async (req, res) => {
         }
 
         if (isEdited) {
-            vehicle.editedBy = req.user?.username || "System";
+            const editUser = (req.user?.firstName && req.user?.lastName)
+                ? `${req.user.firstName} ${req.user.lastName}`
+                : (req.user?.username || "System");
+            vehicle.editedBy = editUser;
             // CREATE SYSTEM LOG
             await createSysLog(vehicle.editedBy, 'EDIT_APPREHENSION', `Edited apprehension ${id} (${changes.length > 0 ? changes.join(', ') : 'unknown changes'})`);
         }

@@ -209,6 +209,7 @@ const AccountsPage = () => {
                         <table className="w-full text-left border-collapse min-w-[600px]">
                             <thead className="bg-[#000060] text-white">
                                 <tr>
+                                    <th className="py-3 px-6 font-semibold border-r border-blue-800/30">Name</th>
                                     <th className="py-3 px-6 font-semibold border-r border-blue-800/30">Username</th>
                                     <th className="py-3 px-6 font-semibold border-r border-blue-800/30">Email</th>
                                     <th className="py-3 px-6 font-semibold border-r border-blue-800/30 text-center">Role</th>
@@ -228,6 +229,9 @@ const AccountsPage = () => {
                                 ) : (
                                     currentItems.map((user) => (
                                         <tr key={user._id} className="border-b border-gray-300 hover:bg-gray-100 transition-colors">
+                                            <td className="py-3 px-6 h-12 font-medium text-gray-900">
+                                                {(user.firstName || user.lastName) ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : <span className="text-gray-400 italic">—</span>}
+                                            </td>
                                             <td className="py-3 px-6 h-12 font-medium text-gray-900">{user.username}</td>
                                             <td className="py-3 px-6 h-12">{user.email}</td>
                                             <td className="py-3 px-6 h-12 text-center">

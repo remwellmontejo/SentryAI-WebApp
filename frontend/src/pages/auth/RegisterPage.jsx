@@ -7,6 +7,8 @@ import api from '../../lib/axios.js';
 
 function RegisterPage() {
 
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -18,13 +20,15 @@ function RegisterPage() {
         event.preventDefault();
 
         const formData = {
+            firstName: firstName,
+            lastName: lastName,
             username: username,
             email: email,
             password: password,
             confirmPassword: confirmPassword,
         };
 
-        if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
+        if (!formData.firstName || !formData.lastName || !formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
             return toast.error('Please fill in all fields.');
         }
 
@@ -34,6 +38,8 @@ function RegisterPage() {
 
         try {
             await api.post('/auth/register', {
+                firstName: formData.firstName,
+                lastName: formData.lastName,
                 username: formData.username,
                 email: formData.email,
                 password: formData.password,
@@ -93,6 +99,34 @@ function RegisterPage() {
                                 No Contact Apprehension Policy for Illegal Parking
                             </p>
                         </div>
+                        {/* First Name & Last Name (side by side) */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="label">
+                                    <span className="label-text text-black">First Name</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="First name"
+                                    className="input input-bordered w-full rounded-md placeholder-gray-500"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="label">
+                                    <span className="label-text text-black">Last Name</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="Last name"
+                                    className="input input-bordered w-full rounded-md placeholder-gray-500"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
                         <div>
                             <label className="label">
                                 <span className="label-text text-black">Username</span>
@@ -101,8 +135,8 @@ function RegisterPage() {
                                 type="text"
                                 placeholder="Choose a username"
                                 className="input input-bordered w-full rounded-md placeholder-gray-500"
-                                value={username} // Set value from state
-                                onChange={(e) => setUsername(e.target.value)} // Update state on change
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
                             />
                         </div>
 

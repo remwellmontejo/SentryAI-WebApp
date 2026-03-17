@@ -36,7 +36,9 @@ function LoginPage() {
             toast.success('Login successful!');
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('username', response.data.username);
-            localStorage.setItem('role', response.data.role); // ADD THIS
+            localStorage.setItem('firstName', response.data.firstName || '');
+            localStorage.setItem('lastName', response.data.lastName || '');
+            localStorage.setItem('role', response.data.role);
         } catch (error) {
             let errorMessage = 'Login failed. Please try again.'; // Default message
             if (error.response && error.response.data) {

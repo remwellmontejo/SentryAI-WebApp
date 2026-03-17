@@ -5,7 +5,7 @@ import { createSysLog } from './SystemLogController.js'; // IMPORT LOGGING
 
 const register = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, firstName, lastName } = req.body;
         const user = await UserModel.findOne({ email });
         if (user) {
             return res.status(409).json({ message: "User already exists", success: false });
@@ -17,7 +17,7 @@ const register = async (req, res) => {
         // First user auto-active, rest inactive
         const status = userCount === 0 ? 'active' : 'inactive';
 
-        const newUser = new UserModel({ username, email, password, status, role });
+        const newUser = new UserModel({ username, email, password, status, role, firstName: firstName || '', lastName: lastName || '' });
         newUser.password = await bcrypt.hash(password, 10);
         await newUser.save();
 
@@ -48,7 +48,7 @@ const login = async (req, res) => {
             return res.status(403).json({ message: "Email or password is incorrect.", success: false });
         }
         const jwtToken = jwt.sign(
-            { id: user._id, email: user.email, role: user.role, username: user.username },
+            { id: user._id, email: user.email, role: user.role, username: user.username, firstName: user.firstName || '', lastName: user.lastName || '' },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -60,6 +60,8 @@ const login = async (req, res) => {
             token: jwtToken, 
             email: email,
             username: user.username,
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
             role: user.role,
             success: true
         });
