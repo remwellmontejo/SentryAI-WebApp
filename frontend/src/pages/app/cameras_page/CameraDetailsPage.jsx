@@ -4,8 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from "../../../lib/axios.js";
 import { useCameraStatus } from "../../../hooks/useCameraStatus";
 import {
-    CheckCircle, XCircle, ArrowLeft, Settings,
-    ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RefreshCw, Loader
+    CheckCircle, XCircle, ArrowLeft, Settings, RefreshCw, Loader
 } from "lucide-react";
 import BoundingPolygonOverlay from "../../../components/BoundingPolygonOverlay";
 import toast from 'react-hot-toast';
@@ -238,13 +237,6 @@ const CameraDetailsPage = () => {
     // Globally disabled if offline or currently moving
     const isControlDisabled = !isOnline || isServoMoving;
 
-    // Specifically disable arrows if pushing them would break the 0-180 limits
-    // Note: direction values match your `handleServoNudge` payload mapping (-1 or 1)
-    const isTiltUpDisabled = isControlDisabled || (servoState.tilt - 10 < 0);
-    const isTiltDownDisabled = isControlDisabled || (servoState.tilt + 10 > 180);
-    const isPanLeftDisabled = isControlDisabled || (servoState.pan + 10 > 180);
-    const isPanRightDisabled = isControlDisabled || (servoState.pan - 10 < 0);
-
     return (
         <div className="min-h-screen bg-gray-50" data-theme="corporateBlue">
             <Navbar />
@@ -367,16 +359,16 @@ const CameraDetailsPage = () => {
                                             </div>
                                             <input
                                                 type="range"
-                                                min="45"
-                                                max="135"
+                                                min="0"
+                                                max="180"
                                                 value={servoState?.pan ?? 90}
                                                 onChange={(e) => handleSliderChange('pan', e.target.value)}
                                                 disabled={isControlDisabled}
                                                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:accent-gray-400 disabled:cursor-not-allowed"
                                             />
                                             <div className="flex justify-between text-xs text-gray-400 mt-1 font-mono">
-                                                <span>45°</span>
-                                                <span>135°</span>
+                                                <span>0°</span>
+                                                <span>180°</span>
                                             </div>
                                         </div>
 
@@ -391,7 +383,7 @@ const CameraDetailsPage = () => {
                                             <input
                                                 type="range"
                                                 min="90"
-                                                max="130"
+                                                max="140"
                                                 value={servoState?.tilt ?? 90}
                                                 onChange={(e) => handleSliderChange('tilt', e.target.value)}
                                                 disabled={isControlDisabled}
