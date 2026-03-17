@@ -165,10 +165,16 @@ const CameraSettingsPage = () => {
     };
 
     const handleSave = async () => {
+        // Validate: if zone detection is enabled, require exactly 6 points
+        if (config.zoneEnabled && tempPoints.length < 6) {
+            toast.error(`Zone Detection is enabled but only ${tempPoints.length}/6 points are plotted. Please plot all 6 points or disable Zone Detection.`);
+            return;
+        }
+
         setSaving(true);
         try {
             const finalConfig = { ...config };
-            if (tempPoints.length === 4) {
+            if (tempPoints.length === 6) {
                 finalConfig.polyX = tempPoints.map(p => p.x);
                 finalConfig.polyY = tempPoints.map(p => p.y);
             }
@@ -282,8 +288,9 @@ const CameraSettingsPage = () => {
                                 </div>
                                 <button
                                     onClick={handleSave}
-                                    disabled={saving}
-                                    className="flex items-center gap-2 px-4 py-2 btn btn-primary text-white rounded-lg disabled:opacity-50 font-medium shadow-sm transition-all"
+                                    disabled={saving || (config.zoneEnabled && tempPoints.length < 6)}
+                                    title={config.zoneEnabled && tempPoints.length < 6 ? `Plot ${6 - tempPoints.length} more point(s) to save` : ''}
+                                    className="flex items-center gap-2 px-4 py-2 btn btn-primary text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm transition-all"
                                 >
                                     {saving ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
                                     Save Changes
