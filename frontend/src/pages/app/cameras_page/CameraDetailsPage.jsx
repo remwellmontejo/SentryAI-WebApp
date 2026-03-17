@@ -361,6 +361,7 @@ const CameraDetailsPage = () => {
                                                 type="range"
                                                 min="0"
                                                 max="180"
+                                                step="5"
                                                 value={servoState?.pan ?? 90}
                                                 onChange={(e) => handleSliderChange('pan', e.target.value)}
                                                 disabled={isControlDisabled}
@@ -384,6 +385,7 @@ const CameraDetailsPage = () => {
                                                 type="range"
                                                 min="90"
                                                 max="130"
+                                                step="5"
                                                 value={servoState?.tilt ?? 90}
                                                 onChange={(e) => handleSliderChange('tilt', e.target.value)}
                                                 disabled={isControlDisabled}
