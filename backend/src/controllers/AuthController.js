@@ -6,11 +6,11 @@ import { createSysLog } from './SystemLogController.js'; // IMPORT LOGGING
 const register = async (req, res) => {
     try {
         const { username, email, password, firstName, lastName } = req.body;
-        const user = await UserModel.findOne({ email });
+        const user = await UserModel.findOne({ $or: [{ email: email }, { username: username }] });
         if (user) {
-            return res.status(409).json({ message: "User already exists", success: false });
+            return res.status(409).json({ message: "Username or Email already exists", success: false });
         }
-        
+
         // Count users to verify if this is the first user
         const userCount = await UserModel.countDocuments();
         const role = userCount === 0 ? 'Admin' : 'Employee';
@@ -60,7 +60,7 @@ const login = async (req, res) => {
 
         return res.status(200).json({
             message: "Login successful",
-            token: jwtToken, 
+            token: jwtToken,
             email: user.email,
             username: user.username,
             firstName: user.firstName || '',
