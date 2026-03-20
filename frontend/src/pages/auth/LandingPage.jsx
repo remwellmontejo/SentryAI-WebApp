@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import SentryAILogo from '../../assets/sentry-ai-logo.svg?react';
 import { Link, useNavigate } from 'react-router'; // Changed to react-router-dom
+import { Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/axios'; // Use your custom Axios instance!
 
@@ -54,7 +55,16 @@ function LandingPage() {
     };
 
     return (
-        <div className="flex min-h-screen flex-col lg:flex-row" data-theme="corporateBlue">
+        <div className="flex min-h-screen flex-col lg:flex-row relative" data-theme="corporateBlue">
+            {/* Floating About Button */}
+            <div className="absolute top-4 right-4 sm:top-6 sm:right-8 z-50">
+                <Link to="/about-system" className="btn btn-sm sm:btn-md btn-outline text-white border-white hover:bg-white hover:text-primary rounded-full shadow-lg opacity-90 hover:opacity-100 flex items-center gap-2 bg-primary/20 backdrop-blur-sm">
+                    <Info size={18} />
+                    <span className="hidden sm:inline">About SentryAI</span>
+                    <span className="sm:hidden">About</span>
+                </Link>
+            </div>
+
             {/* 1. Left Pane (Logo & Brand) */}
             <div className="hidden lg:flex lg:flex-1 flex-col justify-center items-center bg-base-100 text-neutral-content p-10 relative shadow-2xl">
                 <div className="text-center">

@@ -41,6 +41,7 @@ const App = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<LandingPage />} />
+        <Route path="/about-system" element={<AboutPage isPublic={true} />} />
         <Route path="/public-results/:plateNumber" element={<ApprehensionSearchPage />} />
         <Route path="/public-details/:id" element={<PublicApprehensionDetailsPage />} />
 
