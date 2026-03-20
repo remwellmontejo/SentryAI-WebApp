@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '../../lib/axios.js';
 import toast from 'react-hot-toast';
 import Navbar from '../../components/Navbar.jsx';
-import { Search, Filter, ChevronLeft, ChevronRight, Loader } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, Loader, Trash2 } from "lucide-react";
 
 const AccountsPage = () => {
     // --- STATE ---
@@ -18,6 +18,9 @@ const AccountsPage = () => {
     const [showFilter, setShowFilter] = useState(false);
     const [dateRange, setDateRange] = useState({ start: "", end: "" });
     const filterRef = useRef(null);
+
+    // Delete Confirmation State
+    const [deleteTarget, setDeleteTarget] = useState(null);
 
     const fetchUsers = async () => {
         try {
@@ -62,6 +65,18 @@ const AccountsPage = () => {
             fetchUsers();
         } catch (error) {
             toast.error(error.response?.data?.message || "Failed to update status");
+        }
+    };
+
+    const handleDeleteUser = async () => {
+        if (!deleteTarget) return;
+        try {
+            const response = await api.delete(`api/users/${deleteTarget._id}`);
+            toast.success(response.data.message);
+            setDeleteTarget(null);
+            fetchUsers();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to delete account");
         }
     };
 
@@ -215,14 +230,15 @@ const AccountsPage = () => {
                                     <th className="py-3 px-6 font-semibold border-r border-blue-800/30 text-center">Role</th>
                                     <th className="py-3 px-6 font-semibold border-r border-blue-800/30 text-center">Status</th>
                                     <th className="py-3 px-6 font-semibold text-center">Joined</th>
+                                    <th className="py-3 px-6 font-semibold text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="text-gray-700 bg-white">
                                 {loading ? (
-                                    <tr><td colSpan="5" className="text-center py-12"><Loader size={32} className="text-primary animate-spin mx-auto" /></td></tr>
+                                    <tr><td colSpan="7" className="text-center py-12"><Loader size={32} className="text-primary animate-spin mx-auto" /></td></tr>
                                 ) : currentItems.length === 0 ? (
                                     <tr>
-                                        <td colSpan="5" className="text-center py-8 text-base-content/50">
+                                        <td colSpan="7" className="text-center py-8 text-base-content/50">
                                             No users found.
                                         </td>
                                     </tr>
@@ -256,6 +272,15 @@ const AccountsPage = () => {
                                             </td>
                                             <td className="py-3 px-6 h-12 text-center text-sm text-gray-600">
                                                 {new Date(user.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="py-3 px-6 h-12 text-center">
+                                                <button
+                                                    onClick={() => setDeleteTarget(user)}
+                                                    className="text-gray-400 hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50"
+                                                    title="Delete Account"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))
@@ -307,6 +332,37 @@ const AccountsPage = () => {
                     )}
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {deleteTarget && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDeleteTarget(null)}>
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-red-100 text-red-600 rounded-lg">
+                                <Trash2 size={22} />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900">Delete Account</h3>
+                        </div>
+                        <p className="text-gray-600 mb-6">
+                            Are you sure you want to delete the account <strong>{deleteTarget.username}</strong>? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setDeleteTarget(null)}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteUser}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

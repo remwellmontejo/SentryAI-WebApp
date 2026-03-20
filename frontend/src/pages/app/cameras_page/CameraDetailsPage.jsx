@@ -1,10 +1,10 @@
 import Navbar from "../../../components/Navbar";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useLocation } from "react-router";
 import React, { useState, useEffect, useRef } from 'react';
 import api from "../../../lib/axios.js";
 import { useCameraStatus } from "../../../hooks/useCameraStatus";
 import {
-    CheckCircle, XCircle, ArrowLeft, Settings, RefreshCw, Loader
+    CheckCircle, XCircle, ArrowLeft, Settings, RefreshCw, Loader, ChevronLeft, ChevronRight
 } from "lucide-react";
 import BoundingPolygonOverlay from "../../../components/BoundingPolygonOverlay";
 import toast from 'react-hot-toast';
@@ -55,6 +55,25 @@ const formatDateAndTime = (isoString) => {
 const CameraDetailsPage = () => {
     const { serialNumber } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const cameraSerials = location.state?.cameraSerials || [];
+
+    // Prev/Next navigation
+    const currentIndex = cameraSerials.findIndex(s => s === serialNumber);
+    const hasPrevious = currentIndex > 0;
+    const hasNext = currentIndex !== -1 && currentIndex < cameraSerials.length - 1;
+
+    const handlePrevious = () => {
+        if (hasPrevious) {
+            navigate(`/cameras/${cameraSerials[currentIndex - 1]}`, { state: { cameraSerials }, replace: true });
+        }
+    };
+
+    const handleNext = () => {
+        if (hasNext) {
+            navigate(`/cameras/${cameraSerials[currentIndex + 1]}`, { state: { cameraSerials }, replace: true });
+        }
+    };
 
     const [cameraData, setCameraData] = useState(null);
     const [lastActivity, setLastActivity] = useState(null);
@@ -246,8 +265,36 @@ const CameraDetailsPage = () => {
                     <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium">
                         <ArrowLeft size={20} /> Back
                     </button>
+
+                    {cameraSerials.length > 1 && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handlePrevious}
+                                disabled={!hasPrevious}
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${hasPrevious
+                                    ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50'
+                                    : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                                    }`}
+                            >
+                                <ChevronLeft size={16} /> Prev
+                            </button>
+                            <span className="text-sm font-medium text-gray-500 px-2 min-w-[60px] text-center">
+                                {currentIndex + 1} / {cameraSerials.length}
+                            </span>
+                            <button
+                                onClick={handleNext}
+                                disabled={!hasNext}
+                                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${hasNext
+                                    ? 'bg-white border-blue-200 text-blue-600 hover:bg-blue-50'
+                                    : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                                    }`}
+                            >
+                                Next <ChevronRight size={16} />
+                            </button>
+                        </div>
+                    )}
                 </div>
-                <div className="grid lg:grid-cols-2 gap-8 lg:items-center">
+                <div className="grid lg:grid-cols-2 gap-8 lg:items-start">
 
                     {/* ================= LEFT COLUMN: LIVE STREAM ================= */}
                     <div className="flex items-center justify-center w-full">
@@ -327,6 +374,11 @@ const CameraDetailsPage = () => {
                                             {cameraData.serialNumber}
                                         </span>
                                     </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-gray-200">
+                                    <p className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Location</p>
+                                    <span className="font-sm text-gray-700">{cameraData.location || <span className="text-gray-400 italic">Not set</span>}</span>
                                 </div>
 
                                 <div className="pt-4 border-t border-gray-200">

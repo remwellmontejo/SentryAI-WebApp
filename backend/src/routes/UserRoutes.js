@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllUsers, updateUserRole, updateUserStatus } from '../controllers/UserController.js';
+import { getAllUsers, updateUserRole, updateUserStatus, deleteUser } from '../controllers/UserController.js';
 import { verifyToken } from '../middlewares/EnsureAuth.js';
 import { isAdmin } from '../middlewares/IsAdmin.js';
 
@@ -12,5 +12,6 @@ router.use(isAdmin);
 router.get('/', getAllUsers);
 router.put('/:id/role', updateUserRole);
 router.put('/:id/status', updateUserStatus);
+router.delete('/:id', deleteUser);
 
 export default router;

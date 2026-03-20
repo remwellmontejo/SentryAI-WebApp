@@ -58,3 +58,22 @@ export const updateUserStatus = async (req, res) => {
         res.status(500).json({ success: false, message: "Error updating status", error: error.message });
     }
 };
+
+// Delete user
+export const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await UserModel.findByIdAndDelete(id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const adminUser = req.user?.username || "System";
+        await createSysLog(adminUser, 'DELETE_USER', `Deleted account of ${user.username} (${user.email})`);
+
+        res.status(200).json({ success: true, message: "Account deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Error deleting user", error: error.message });
+    }
+};

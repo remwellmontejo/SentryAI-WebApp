@@ -12,7 +12,8 @@ const CameraRegisterPage = () => {
     // Form state
     const [formData, setFormData] = useState({
         name: '',
-        serialNumber: ''
+        serialNumber: '',
+        location: ''
     });
     const [loading, setLoading] = useState(false);
 
@@ -197,6 +198,19 @@ const CameraRegisterPage = () => {
                                                 className="block w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 bg-gray-50 text-gray-900 font-mono tracking-wider uppercase text-sm sm:text-base"
                                                 placeholder="e.g. CAM-12345"
                                                 required
+                                                disabled={loading}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Location</label>
+                                            <input
+                                                type="text"
+                                                name="location"
+                                                value={formData.location}
+                                                onChange={handleChange}
+                                                className="block w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 bg-gray-50 text-gray-900 text-sm sm:text-base"
+                                                placeholder="e.g. Main Gate, Building A Entrance"
                                                 disabled={loading}
                                             />
                                         </div>

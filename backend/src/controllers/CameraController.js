@@ -17,7 +17,7 @@ const getCameraDetails = async (req, res) => {
 
 const registerCamera = async (req, res) => {
     try {
-        const { serialNumber, name } = req.body;
+        const { serialNumber, name, location } = req.body;
 
         // Ensure camera doesn't already exist
         const existing = await Camera.findOne({ serialNumber });
@@ -28,6 +28,7 @@ const registerCamera = async (req, res) => {
         const newCamera = new Camera({
             serialNumber,
             name,
+            location: location || '',
             status: 'offline'
         });
 

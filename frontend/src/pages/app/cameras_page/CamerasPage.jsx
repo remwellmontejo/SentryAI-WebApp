@@ -32,7 +32,8 @@ const CamerasPage = () => {
     }, []);
 
     const toCameraDetailsPage = (cameraSerialNumber) => {
-        navigate(`/cameras/${cameraSerialNumber}`);
+        const cameraSerials = filteredCameras.map(c => c.serialNumber);
+        navigate(`/cameras/${cameraSerialNumber}`, { state: { cameraSerials } });
     };
 
     // --- LOGIC: SEARCH ---
