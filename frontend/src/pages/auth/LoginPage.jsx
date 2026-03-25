@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SentryAILogo from '../../assets/sentry-ai-logo.svg?react';
 import { Link, useNavigate } from 'react-router';
-import { Eye, EyeOff, Info } from "lucide-react";
+import { Eye, EyeOff, Info, Code } from "lucide-react";
 import toast from 'react-hot-toast';
 import api from '../../lib/axios.js';
 
@@ -64,8 +64,13 @@ function LoginPage() {
 
     return (
         <div className="flex min-h-screen flex-col lg:flex-row relative" data-theme="corporateBlue">
-            {/* Floating About Button */}
-            <div className="absolute top-4 right-4 sm:top-6 sm:right-8 z-50">
+            {/* Floating Nav Buttons */}
+            <div className="absolute top-4 right-4 sm:top-6 sm:right-8 z-50 flex items-center gap-2">
+                <Link to="/api-docs" className="btn btn-sm sm:btn-md btn-outline text-white border-white hover:bg-white hover:text-primary rounded-full shadow-lg opacity-90 hover:opacity-100 flex items-center gap-2 bg-primary/20 backdrop-blur-sm">
+                    <Code size={18} />
+                    <span className="hidden sm:inline">API Docs</span>
+                    <span className="sm:hidden">API</span>
+                </Link>
                 <Link to="/about-system" className="btn btn-sm sm:btn-md btn-outline text-white border-white hover:bg-white hover:text-primary rounded-full shadow-lg opacity-90 hover:opacity-100 flex items-center gap-2 bg-primary/20 backdrop-blur-sm">
                     <Info size={18} />
                     <span className="hidden sm:inline">About SentryAI</span>

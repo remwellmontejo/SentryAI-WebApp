@@ -14,6 +14,7 @@ import publicApprehensionsRoutes from './routes/PublicApprehensionsRoutes.js'
 import UserRouter from './routes/UserRoutes.js'
 import SystemLogRouter from './routes/SystemLogRoutes.js'
 import NotificationRouter from './routes/NotificationRoutes.js'
+import externalApiRoutes from './routes/ExternalApiRoutes.js'
 
 const app = express();
 const __dirname = path.resolve();
@@ -62,6 +63,7 @@ app.use("/public", publicApprehensionsRoutes);
 app.use("/api/users", UserRouter);
 app.use("/api/logs", SystemLogRouter);
 app.use("/api/notifications", NotificationRouter);
+app.use("/api/external/apprehensions", externalApiRoutes);
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });

@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'; // <--- 1. ADD THIS IMPORT
 
 import HomePage from './pages/home/HomePage.jsx'
 import AboutPage from './pages/app/about_page/AboutPage.jsx'
+import ApiDocsPage from './pages/app/api_docs_page/ApiDocsPage.jsx'
 import RegisterPage from './pages/auth/RegisterPage.jsx'
 import LoginPage from './pages/auth/LoginPage.jsx'
 import LandingPage from './pages/auth/LandingPage.jsx'
@@ -42,6 +43,7 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<LandingPage />} />
         <Route path="/about-system" element={<AboutPage isPublic={true} />} />
+        <Route path="/api-docs" element={<ApiDocsPage />} />
         <Route path="/public-results/:plateNumber" element={<ApprehensionSearchPage />} />
         <Route path="/public-details/:id" element={<PublicApprehensionDetailsPage />} />
 
