@@ -136,7 +136,7 @@ export async function createApprehendedVehicle(req, res) {
 
             if (!apiResponse.ok) {
                 console.error(`[ALPR ERROR] Status ${apiResponse.status}`);
-                console.error(`[ALPR ERROR] Response: ${apiResponse.json()}`);
+                //console.error(`[ALPR ERROR] Response: ${apiResponse.json()}`);
                 detectedPlateNumber = "FAILED";
             } else {
                 const json = await apiResponse.json();
