@@ -136,6 +136,7 @@ export async function createApprehendedVehicle(req, res) {
 
             if (!apiResponse.ok) {
                 console.error(`[ALPR ERROR] Status ${apiResponse.status}`);
+                console.error(`[ALPR ERROR] Response: ${apiResponse.json()}`);
                 detectedPlateNumber = "FAILED";
             } else {
                 const json = await apiResponse.json();
@@ -191,8 +192,8 @@ export async function createApprehendedVehicle(req, res) {
 
         // UNIQUE TRIGGER: Notifying Admins of New Upload
         await createNotification(
-            `A new ${vehicleType} apprehension was uploaded from camera ${cameraSerialNumber || "UNKNOWN"}`, 
-            'NEW_APPREHENSION', 
+            `A new ${vehicleType} apprehension was uploaded from camera ${cameraSerialNumber || "UNKNOWN"}`,
+            'NEW_APPREHENSION',
             newApprehendedVehicle._id
         );
 
@@ -345,7 +346,7 @@ export const updateApprehendedVehicle = async (req, res) => {
         if (status !== undefined && vehicle.status !== status) {
             if (['Pending', 'Approved', 'Rejected', 'Resolved'].includes(status)) {
                 vehicle.status = status;
-                
+
                 // Track status changes here if they happen through the update route
                 const actionUser = (req.user?.firstName && req.user?.lastName)
                     ? `${req.user.firstName} ${req.user.lastName}`
