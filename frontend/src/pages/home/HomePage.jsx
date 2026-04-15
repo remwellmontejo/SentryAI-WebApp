@@ -1,7 +1,8 @@
 import Navbar from '../../components/Navbar.jsx'
 import InfoCard from '../../components/InfoCard.jsx'
-import { useState, useEffect, useRef } from "react";
-import { Search, Filter, ChevronLeft, ChevronRight, ChevronDown, View, CarFront, ClipboardClock, CalendarCheck2, Video, X, Loader } from "lucide-react";
+import TableFilterBar from '../../components/TableFilterBar.jsx'
+import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, View, CarFront, ClipboardClock, CalendarCheck2, Video, Loader } from "lucide-react";
 import { useNavigate } from "react-router";
 import api from "../../lib/axios.js";
 
@@ -23,10 +24,10 @@ const HomePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Date Filter State
-  const [showFilter, setShowFilter] = useState(false);
+  // Filter State
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
-  const filterRef = useRef(null); // To close dropdown when clicking outside
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState("All");
 
   // --- FETCH DATA ---
   useEffect(() => {
@@ -37,7 +38,7 @@ const HomePage = () => {
           api.get('/api/apprehended-vehicle/status/Pending')
         ]);
         setStats(stats.data);
-        setVehicles(vehicles.data); // Assuming you still want all vehicles for the table
+        setVehicles(vehicles.data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -45,15 +46,6 @@ const HomePage = () => {
       }
     };
     fetchData();
-
-    // Click outside listener for filter dropdown
-    const handleClickOutside = (event) => {
-      if (filterRef.current && !filterRef.current.contains(event.target)) {
-        setShowFilter(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const toDetailsPage = (id) => {
@@ -65,12 +57,10 @@ const HomePage = () => {
   const filteredVehicles = vehicles.filter((vehicle) => {
     const query = searchQuery.toLowerCase();
 
-    // 1. Text Search (Type, Status, Plate, Date String)
     const typeMatch = vehicle.vehicleType?.toLowerCase().includes(query);
     const statusMatch = vehicle.status?.toLowerCase().includes(query);
     const plateMatch = vehicle.plateNumber?.toLowerCase().includes(query);
 
-    // Format date for string search (matches table display)
     const displayedDate = new Date(vehicle.createdAt).toLocaleDateString('en-US', {
       timeZone: 'Asia/Manila', month: '2-digit', day: '2-digit', year: '2-digit'
     }).replace(/\//g, '-');
@@ -78,23 +68,28 @@ const HomePage = () => {
 
     const isTextMatch = typeMatch || statusMatch || plateMatch || dateStringMatch;
 
-    // 2. Date Range Filter
+    // Vehicle Type Filter
+    if (vehicleTypeFilter !== 'All' && vehicle.vehicleType !== vehicleTypeFilter) return false;
+
+    // Date Range Filter
     let isDateInRange = true;
     if (dateRange.start || dateRange.end) {
-      const vehicleDate = new Date(vehicle.createdAt).setHours(0, 0, 0, 0); // Normalize to midnight
-
+      const vehicleDate = new Date(vehicle.createdAt).setHours(0, 0, 0, 0);
       if (dateRange.start) {
         const startDate = new Date(dateRange.start).setHours(0, 0, 0, 0);
         if (vehicleDate < startDate) isDateInRange = false;
       }
-
       if (dateRange.end) {
-        const endDate = new Date(dateRange.end).setHours(23, 59, 59, 999); // End of day
+        const endDate = new Date(dateRange.end).setHours(23, 59, 59, 999);
         if (vehicleDate > endDate) isDateInRange = false;
       }
     }
 
     return isTextMatch && isDateInRange;
+  }).sort((a, b) => {
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+    return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
   });
 
   // --- LOGIC: PAGINATION ---
@@ -117,7 +112,6 @@ const HomePage = () => {
 
   const clearDateFilter = () => {
     setDateRange({ start: "", end: "" });
-    setShowFilter(false);
   };
 
   // --- FORMATTERS ---
@@ -160,77 +154,22 @@ const HomePage = () => {
         <div className="w-full bg-white p-4 rounded-lg">
 
           {/* --- Top Header Section --- */}
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-            <h2 className="text-2xl font-bold text-base-content">Pending Apprehensions</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+            <h2 className="text-2xl font-bold text-base-content flex-shrink-0">Pending Apprehensions</h2>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto relative">
-
-              {/* Filter Button & Dropdown */}
-              <div ref={filterRef} className="relative">
-                <button
-                  onClick={() => setShowFilter(!showFilter)}
-                  className={`p-2 border rounded-md transition-colors flex items-center gap-2 font-medium text-sm ${(dateRange.start || dateRange.end)
-                    ? "bg-blue-50 border-blue-500 text-blue-600"
-                    : "border-gray-400 hover:bg-gray-50 text-black"
-                    }`}
-                >
-                  <Filter size={18} />
-                  <span>Filter</span>
-                  {(dateRange.start || dateRange.end) && <span className="text-xs font-bold bg-blue-500 text-white rounded-full px-1.5 py-0.5 leading-none">✓</span>}
-                </button>
-
-                {/* Filter Dropdown */}
-                {showFilter && (
-                  <>
-                    {/* Mobile backdrop */}
-                    <div className="fixed inset-0 bg-black/30 z-40 sm:hidden" onClick={() => setShowFilter(false)} />
-                    <div className="fixed left-4 right-4 top-1/3 z-50 sm:absolute sm:right-0 sm:left-auto sm:top-auto sm:mt-2 w-auto sm:w-72 bg-white border border-gray-200 rounded-lg shadow-xl p-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="font-bold text-gray-700">Filter by Date</h3>
-                        {(dateRange.start || dateRange.end) && (
-                          <button onClick={clearDateFilter} className="text-xs text-red-500 hover:text-red-700 font-medium">Clear</button>
-                        )}
-                      </div>
-
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">Start Date</label>
-                          <input
-                            type="date"
-                            name="start"
-                            value={dateRange.start}
-                            onChange={handleDateChange}
-                            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">End Date</label>
-                          <input
-                            type="date"
-                            name="end"
-                            value={dateRange.end}
-                            onChange={handleDateChange}
-                            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Search Input */}
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  placeholder="Search Plate, Type..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="pl-10 pr-4 py-2 border border-gray-400 rounded-full w-full focus:outline-none focus:border-blue-900 transition-colors"
-                />
-              </div>
-            </div>
+            <TableFilterBar
+              searchQuery={searchQuery}
+              onSearchChange={handleSearchChange}
+              placeholder="Search Plate, Type..."
+              dateRange={dateRange}
+              onDateChange={handleDateChange}
+              onClearDate={clearDateFilter}
+              sortOrder={sortOrder}
+              onSortChange={(order) => { setSortOrder(order); setCurrentPage(1); }}
+              showVehicleFilter
+              vehicleTypeFilter={vehicleTypeFilter}
+              onVehicleTypeChange={(type) => { setVehicleTypeFilter(type); setCurrentPage(1); }}
+            />
           </div>
 
           {/* --- The Table --- */}
