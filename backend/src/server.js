@@ -124,9 +124,7 @@ wss.on('connection', async (ws, req) => {
                 streamEnabled: camera.config.streamEnabled,
                 streamResolution: camera.config.streamResolution,
                 apprehensionTimer: camera.config.apprehensionTimer,
-                zoneEnabled: camera.config.zoneEnabled,
-                polyX: camera.config.polyX,
-                polyY: camera.config.polyY,
+                zones: camera.config.zones,
                 servoPan: camera.config.servoPan,
                 servoTilt: camera.config.servoTilt
             });
