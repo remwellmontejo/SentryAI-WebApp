@@ -13,15 +13,13 @@ const CameraSchema = new mongoose.Schema({
         streamEnabled: { type: Boolean, default: false },
         apprehensionTimer: { type: Number, default: 30 },
         streamResolution: { type: Number, default: 1 },
-        zoneEnabled: { type: Boolean, default: false },
-        // Example of how it should look in your schema:
-        polyX: {
-            type: [Number],
-            default: [20, 80, 100, 80, 20, 0] // Give it 6 default numbers
-        },
-        polyY: {
-            type: [Number],
-            default: [0, 0, 50, 100, 100, 50] // Give it 6 default numbers
+        zones: {
+            type: [{
+                enabled: { type: Boolean, default: false },
+                polyX: { type: [Number], default: [] },
+                polyY: { type: [Number], default: [] }
+            }],
+            default: []
         },
         servoPan: { type: Number, default: 90 },
         servoTilt: { type: Number, default: 90 },

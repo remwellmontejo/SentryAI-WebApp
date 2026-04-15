@@ -1,11 +1,13 @@
-const BoundingPolygonOverlay = ({ polyX, polyY, zoneEnabled }) => {
-    // 1. Safety Check: If data is missing, don't crash
-    if (!polyX || !polyY || polyX.length === 0) return null;
+const ZONE_COLORS = [
+    { fill: 'rgba(255, 0, 0, 0.2)', stroke: 'red' },       // Zone 1 - Red
+    { fill: 'rgba(37, 99, 235, 0.2)', stroke: '#2563eb' },  // Zone 2 - Blue
+    { fill: 'rgba(16, 185, 129, 0.2)', stroke: '#10b981' }, // Zone 3 - Green
+];
 
-    // 2. Convert Arrays to SVG Point String
-    // We assume coordinates are 0-100 (Percentage based)
-    // Format required: "x1,y1 x2,y2 x3,y3 ..."
-    const pointsString = polyX.map((x, i) => `${x},${polyY[i]}`).join(' ');
+const BoundingPolygonOverlay = ({ zones = [] }) => {
+    // Filter to only enabled zones that have points
+    const activeZones = zones.filter(z => z.enabled && z.polyX?.length > 0);
+    if (activeZones.length === 0) return null;
 
     return (
         <div
@@ -15,24 +17,32 @@ const BoundingPolygonOverlay = ({ polyX, polyY, zoneEnabled }) => {
                 left: 0,
                 width: '100%',
                 height: '100%',
-                pointerEvents: 'none', // CRITICAL: Lets clicks pass through to video
-                zIndex: 10 // Ensures it sits on top of the image
+                pointerEvents: 'none',
+                zIndex: 10
             }}
         >
-            {zoneEnabled && (
-                <svg
-                    viewBox="0 0 100 100" // Defines our canvas as 100x100 units
-                    preserveAspectRatio="none" // Forces SVG to stretch exactly like the video
-                    style={{ width: '100%', height: '100%' }}
-                >
-                    <polygon
-                        points={pointsString}
-                        fill="rgba(255, 0, 0, 0.2)" // Semi-transparent Red fill
-                        stroke="red"                // Solid Red border
-                        strokeWidth="0.5"           // Thin border line
-                    />
-                </svg>
-            )}
+            <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                style={{ width: '100%', height: '100%' }}
+            >
+                {activeZones.map((zone, idx) => {
+                    // Find original index in the zones array for consistent coloring
+                    const originalIdx = zones.indexOf(zone);
+                    const color = ZONE_COLORS[originalIdx] || ZONE_COLORS[0];
+                    const pointsString = zone.polyX.map((x, i) => `${x},${zone.polyY[i]}`).join(' ');
+
+                    return (
+                        <polygon
+                            key={originalIdx}
+                            points={pointsString}
+                            fill={color.fill}
+                            stroke={color.stroke}
+                            strokeWidth="0.5"
+                        />
+                    );
+                })}
+            </svg>
         </div>
     );
 };

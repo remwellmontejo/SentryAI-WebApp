@@ -50,9 +50,7 @@ const updateCameraConfig = async (req, res) => {
         streamEnabled,
         streamResolution,
         apprehensionTimer,
-        zoneEnabled,
-        polyX,
-        polyY,
+        zones,
         servoPan,
         servoTilt
     } = req.body;
@@ -68,9 +66,7 @@ const updateCameraConfig = async (req, res) => {
                     "config.streamEnabled": streamEnabled,
                     "config.streamResolution": streamResolution,
                     "config.apprehensionTimer": apprehensionTimer,
-                    "config.zoneEnabled": zoneEnabled,
-                    "config.polyX": polyX,
-                    "config.polyY": polyY,
+                    "config.zones": zones,
                     "config.servoPan": servoPan,
                     "config.servoTilt": servoTilt
                 }
@@ -95,9 +91,7 @@ const updateCameraConfig = async (req, res) => {
                 streamEnabled: updatedCamera.config.streamEnabled,
                 streamResolution: updatedCamera.config.streamResolution,
                 apprehensionTimer: updatedCamera.config.apprehensionTimer,
-                zoneEnabled: updatedCamera.config.zoneEnabled,
-                polyX: updatedCamera.config.polyX,
-                polyY: updatedCamera.config.polyY,
+                zones: updatedCamera.config.zones,
                 servoPan: updatedCamera.config.servoPan,
                 servoTilt: updatedCamera.config.servoTilt
             });

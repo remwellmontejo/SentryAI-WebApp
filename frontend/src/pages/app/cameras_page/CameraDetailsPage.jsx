@@ -310,9 +310,7 @@ const CameraDetailsPage = () => {
 
                                 {cameraData && (
                                     <BoundingPolygonOverlay
-                                        polyX={cameraData.config?.polyX}
-                                        polyY={cameraData.config?.polyY}
-                                        zoneEnabled={cameraData.config?.zoneEnabled}
+                                        zones={cameraData.config?.zones || []}
                                     />
                                 )}
 
